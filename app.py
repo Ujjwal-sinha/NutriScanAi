@@ -1,18 +1,19 @@
-import os
-import streamlit as st
-from PIL import Image, UnidentifiedImageError
-from datetime import datetime
-from dotenv import load_dotenv
-import torch
-from transformers import BlipProcessor, BlipForConditionalGeneration
-from langchain_groq import ChatGroq
-from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.output_parsers import StrOutputParser
-from fpdf import FPDF
-import tempfile
-import base64
+# Line 1: Import required libraries
+import os  # For file system operations
+import streamlit as st  # For building the web interface
+from PIL import Image, UnidentifiedImageError  # For image processing
+from datetime import datetime  # For timestamp in PDF
+from dotenv import load_dotenv  # For loading environment variables
+import torch  # For PyTorch-based model processing
+from transformers import BlipProcessor, BlipForConditionalGeneration  # For image captioning
+from langchain_groq import ChatGroq  # For Groq AI integration
+from langchain_core.prompts import ChatPromptTemplate  # For prompt templating
+from langchain_core.output_parsers import StrOutputParser  # For parsing AI output
+from fpdf import FPDF  # For PDF generation
+import tempfile  # For temporary file handling
+import base64  # For encoding PDF for download
 
-# Set Streamlit page configuration
+# Line 14: Set Streamlit page configuration
 st.set_page_config(
     page_title="NutriScan AI - Vitamin Deficiency Detector",
     layout="centered",
@@ -20,22 +21,22 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Define function to load custom CSS
+# Line 21: Define function to load custom CSS
 def local_css(file_name):
     with open(file_name) as f:
         st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
-# Load custom CSS
+# Line 25: Load custom CSS
 local_css("style.css")
 
-# Load environment variables
+# Line 27: Load environment variables
 load_dotenv()
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
-# Set device for PyTorch
+# Line 30: Set device for PyTorch
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
-# Cache models to prevent reloading
+# Line 32: Cache models to prevent reloading
 @st.cache_resource
 def load_models():
     try:
@@ -46,9 +47,10 @@ def load_models():
         st.error(f"Failed to load models: {e}")
         return None, None
 
+# Line 42: Load BLIP models
 processor, model = load_models()
 
-# Optimized image processing function
+# Line 44: Define optimized image processing function
 def describe_image(image: Image.Image) -> str:
     try:
         if not processor or not model:
@@ -62,7 +64,7 @@ def describe_image(image: Image.Image) -> str:
         st.error(f"Image processing failed: {e}")
         return ""
 
-# Efficient prompt template
+# Line 56: Define efficient prompt template
 EFFICIENT_PROMPT_TEMPLATE = """
 As a board-certified nutritionist with 20+ years experience, analyze this medical image showing: {caption}
 Additional patient context: {context}
@@ -99,7 +101,7 @@ Generate a comprehensive deficiency analysis with:
 Format using markdown with clear headings. Be concise but thorough.
 """
 
-# Optimized LLM query function
+# Line 88: Define optimized LLM query function
 def query_langchain(prompt: str) -> str:
     try:
         if not GROQ_API_KEY:
@@ -121,22 +123,69 @@ def query_langchain(prompt: str) -> str:
         st.error(f"Analysis failed: {e}")
         return ""
 
-# Enhanced PDF generator class
+# Line 107: Define enhanced PDF generator class
 class MedicalPDF(FPDF):
-    def __init__(self):
+    def __init__(self, patient_info=""):
         super().__init__()
+        self.patient_info = patient_info
+        self.toc = []
         self.set_auto_page_break(auto=True, margin=15)
         self.set_font('Helvetica', '', 12)
+        self.set_author("NutriScan AI")
+        self.set_title("NutriScan AI Deficiency Report")
+        self.set_subject("Vitamin Deficiency Analysis")
     
     def header(self):
-        self.set_font('Helvetica', 'B', 16)
-        self.cell(0, 10, 'NutriScan AI Deficiency Report', 0, 1, 'C')
-        self.ln(10)
+        if self.page_no() > 1:
+            self.set_font('Helvetica', 'B', 14)
+            self.set_text_color(76, 175, 80)
+            self.cell(0, 10, 'NutriScan AI Deficiency Report', 0, 1, 'C')
+            self.set_line_width(0.5)
+            self.set_draw_color(33, 150, 243)
+            self.line(10, 20, 200, 20)
+            self.ln(10)
     
     def footer(self):
-        self.set_y(-15)
-        self.set_font('Helvetica', 'I', 8)
-        self.cell(0, 10, f'Page {self.page_no()} | Generated: {datetime.now().strftime("%Y-%m-%d %H:%M")}', 0, 0, 'C')
+        if self.page_no() > 1:
+            self.set_y(-15)
+            self.set_font('Helvetica', 'I', 8)
+            self.set_text_color(100, 100, 100)
+            self.cell(0, 10, f'Page {self.page_no() - 1} | Generated: {datetime.now().strftime("%Y-%m-%d %H:%M")}', 0, 0, 'C')
+            self.set_font('Helvetica', 'I', 6)
+            self.set_text_color(200, 200, 200)
+            self.set_xy(10, 270)
+            self.cell(0, 10, 'Powered by NutriScan AI', 0, 0, 'L')
+    
+    def cover_page(self):
+        self.add_page()
+        self.set_font('Helvetica', 'B', 24)
+        self.set_text_color(76, 175, 80)
+        self.cell(0, 20, 'NutriScan AI', 0, 1, 'C')
+        self.set_font('Helvetica', '', 16)
+        self.set_text_color(33, 150, 243)
+        self.cell(0, 10, 'Vitamin Deficiency Analysis Report', 0, 1, 'C')
+        self.ln(20)
+        self.set_font('Helvetica', '', 12)
+        self.set_text_color(0, 0, 0)
+        if self.patient_info:
+            self.multi_cell(0, 8, f'Patient Information:\n{self.patient_info}')
+        self.ln(10)
+        self.cell(0, 8, f'Generated on: {datetime.now().strftime("%Y-%m-%d %H:%M")}', 0, 1, 'C')
+        self.ln(20)
+        self.set_font('Helvetica', 'I', 10)
+        self.cell(0, 8, 'For educational purposes only', 0, 1, 'C')
+    
+    def table_of_contents(self):
+        self.add_page()
+        self.set_font('Helvetica', 'B', 14)
+        self.set_text_color(76, 175, 80)
+        self.cell(0, 10, 'Table of Contents', 0, 1, 'C')
+        self.ln(10)
+        self.set_font('Helvetica', '', 12)
+        self.set_text_color(0, 0, 0)
+        for title, page in self.toc:
+            self.cell(0, 8, f'{title} {"." * (50 - len(title))} {page}', ln=1)
+        self.ln(10)
     
     def add_image(self, image_path, width=180):
         try:
@@ -146,13 +195,66 @@ class MedicalPDF(FPDF):
             st.error(f"Failed to add image to PDF: {e}")
     
     def add_section(self, title, body):
-        self.set_font('Helvetica', 'B', 12)
-        self.multi_cell(0, 10, title.encode('latin1', 'ignore').decode('latin1'))
-        self.set_font('Helvetica', '', 11)
-        self.multi_cell(0, 8, body.encode('latin1', 'ignore').decode('latin1'))
+        self.toc.append((title, self.page_no()))
+        self.set_font('Helvetica', 'B', 14)
+        self.set_text_color(33, 150, 243)
+        self.cell(0, 10, title, 0, 1)
         self.ln(5)
+        self.set_font('Helvetica', '', 11)
+        self.set_text_color(0, 0, 0)
+        lines = body.split('\n')
+        in_list = False
+        for line in lines:
+            line = line.strip()
+            if line.startswith('- '):
+                if not in_list:
+                    in_list = True
+                    self.set_left_margin(15)
+                self.multi_cell(0, 8, f'• {line[2:]}'.encode('latin1', 'ignore').decode('latin1'))
+            elif line.startswith('|'):
+                self.set_left_margin(10)
+                self.create_table(line)
+            else:
+                if in_list:
+                    in_list = False
+                    self.set_left_margin(10)
+                self.multi_cell(0, 8, line.encode('latin1', 'ignore').decode('latin1'))
+            self.ln(2)
+        self.set_left_margin(10)
+        self.ln(5)
+    
+    def create_table(self, line):
+        if line.startswith('|'):
+            cols = [col.strip() for col in line.split('|')[1:-1]]
+            col_width = (self.w - 20) / len(cols)
+            self.set_font('Helvetica', 'B', 11)
+            for col in cols:
+                self.cell(col_width, 10, col.encode('latin1', 'ignore').decode('latin1'), border=1)
+            self.ln()
+            self.set_font('Helvetica', '', 11)
+    
+    def add_summary(self, report):
+        self.add_page()
+        self.toc.append(("Executive Summary", self.page_no()))
+        self.set_font('Helvetica', 'B', 14)
+        self.set_text_color(33, 150, 243)
+        self.cell(0, 10, 'Executive Summary', 0, 1)
+        self.ln(5)
+        self.set_font('Helvetica', '', 11)
+        self.set_text_color(0, 0, 0)
+        summary = "This report provides an AI-generated analysis of potential vitamin deficiencies based on the provided medical image. Key findings include:\n"
+        try:
+            primary = report.split("2. **Detailed Analysis**")[0].split("1. **Primary Deficiency Identification**")[1]
+            summary += f"- {primary.strip()[:200]}...\n"
+            recommendations = report.split("3. **Evidence-Based Recommendations**")[1].split("4. **Clinical Considerations**")[0]
+            summary += f"- Recommendations: {recommendations.strip()[:200]}...\n"
+            summary += "Refer to the detailed sections for comprehensive insights."
+        except IndexError:
+            summary += "- Unable to generate summary due to report structure. Please review detailed sections."
+        self.multi_cell(0, 8, summary.encode('latin1', 'ignore').decode('latin1'))
+        self.ln(10)
 
-# Gradient text function for UI
+# Line 185: Define gradient text function for UI
 def gradient_text(text, color1, color2):
     return f"""
     <style>
@@ -166,11 +268,11 @@ def gradient_text(text, color1, color2):
     <div class="gradient-text">{text}</div>
     """
 
-# Main UI
+# Line 196: Main UI setup
 st.markdown(gradient_text("NutriScan AI", "#4CAF50", "#2196F3"), unsafe_allow_html=True)
 st.markdown("### AI-Powered Vitamin Deficiency Detection from Medical Images")
 
-# Sidebar content
+# Line 199: Sidebar content
 with st.sidebar:
     st.header("About")
     st.markdown("""
@@ -182,9 +284,9 @@ with st.sidebar:
     For accurate deficiency detection.
     """)
     st.divider()
-    st.caption("ℹ️ For educational purposes only")
+    
 
-# Image upload with preview
+# Line 211: Image upload with preview
 col1, col2 = st.columns([3, 2])
 with col1:
     img_file = st.file_uploader(
@@ -201,7 +303,7 @@ with col2:
         except Exception:
             st.warning("Invalid image file")
 
-# Enhanced input form
+# Line 225: Enhanced input form
 with st.expander("➕ Additional Clinical Context"):
     user_context = st.text_area(
         "Patient Information",
@@ -214,7 +316,7 @@ with st.expander("➕ Additional Clinical Context"):
         placeholder="Select applicable conditions"
     )
 
-# Analysis button with progress
+# Line 236: Analysis button with progress
 if st.button("Analyze with NutriScan AI", type="primary", use_container_width=True):
     if not img_file:
         st.warning("Please upload an image")
@@ -265,13 +367,12 @@ if st.button("Analyze with NutriScan AI", type="primary", use_container_width=Tr
             
             progress_bar.progress(100, text="Analysis complete")
             st.success("✓ Report generated")
-            st.balloons()
             
         except Exception as e:
             progress_bar.empty()
             st.error(f"Analysis failed: {str(e)}")
 
-# Enhanced PDF export
+# Line 279: Enhanced PDF export
 if 'report_data' in st.session_state:
     st.divider()
     st.subheader("Report Options")
@@ -279,16 +380,19 @@ if 'report_data' in st.session_state:
     if st.button("📊 Generate Comprehensive PDF Report", use_container_width=True):
         with st.spinner("Generating professional report..."):
             try:
-                pdf = MedicalPDF()
-                pdf.add_page()
+                patient_info = st.session_state.get('report_data', {}).get('patient_info', user_context or "Not provided")
+                pdf = MedicalPDF(patient_info=patient_info)
                 
-                # Save image to temp file
+                pdf.cover_page()
+                pdf.add_summary(st.session_state.report_data["report"])
+                pdf.table_of_contents()
+                
+                pdf.add_page()
                 with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as tmp:
                     st.session_state.report_data["image"].save(tmp.name, quality=90)
                     pdf.add_image(tmp.name)
                     os.unlink(tmp.name)
                 
-                # Add report sections
                 report = st.session_state.report_data["report"]
                 sections = [
                     ("Clinical Findings", report.split("2. **Detailed Analysis**")[0]),
@@ -300,11 +404,9 @@ if 'report_data' in st.session_state:
                     if body.strip():
                         pdf.add_section(title, body)
                 
-                # Generate PDF output
                 pdf_output = pdf.output(dest="S").encode('latin1', 'ignore')
                 b64 = base64.b64encode(pdf_output).decode('latin1')
                 
-                # Custom styled download button
                 button_html = f"""
                 <style>
                     .download-btn {{
@@ -315,7 +417,7 @@ if 'report_data' in st.session_state:
                         text-align: center;
                         text-decoration: none;
                         color: white;
-                        background: linear-gradient(to right, #4CAF50, #2196F3);
+                        background: green);
                         border-radius: 8px;
                         border: none;
                         cursor: pointer;
@@ -341,7 +443,7 @@ if 'report_data' in st.session_state:
             except Exception as e:
                 st.error(f"Report generation failed: {str(e)}")
 
-# Footer
+# Line 322: Footer
 st.markdown("---")
 st.markdown(
     "<p style='text-align: center;'>Built with ❤️ by <b>Ujjwal Sinha</b> • "
