@@ -6,3 +6,5 @@ fpdf
 python-dotenv
 langchain
 langchain_groq
+plotly==5.24.1
+sqlite3 
