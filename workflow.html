@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Medical Image Analysis - Research Paper Diagrams</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 2.5em;
+            font-weight: 300;
+        }
+        .header p {
+            margin: 10px 0 0 0;
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        .content {
+            padding: 30px;
+        }
+        .diagram-section {
+            margin-bottom: 60px;
+            padding: 30px;
+            border-radius: 15px;
+            background: #f8f9fa;
+            border-left: 8px solid #667eea;
+        }
+        .diagram-title {
+            color: #667eea;
+            margin: 0 0 20px 0;
+            font-size: 2em;
+            text-align: center;
+        }
+        .diagram-description {
+            color: #666;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+            line-height: 1.6;
+        }
+        .mermaid {
+            text-align: center;
+            margin: 20px 0;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            overflow-x: auto;
+        }
+        .download-section {
+            text-align: center;
+            margin: 30px 0;
+            padding: 20px;
+            background: #e8f4fd;
+            border-radius: 10px;
+        }
+        .download-btn {
+            background: #667eea;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 0 10px;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .download-btn:hover {
+            background: #5a6fd8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🩺 Medical Image Analysis System</h1>
+            <p>Research Paper Sequence Diagrams - 4-Phase Workflow Breakdown</p>
+        </div>
+        
+        <div class="content">
+            <!-- Phase 1: Image Processing -->
+            <div class="diagram-section">
+                <h2 class="diagram-title">Phase 1: Image Processing</h2>
+                <p class="diagram-description">
+                    Initial phase where the user uploads a medical image, followed by validation and preprocessing. 
+                    This includes quality checks, eye detection, and image transformation for further analysis.
+                </p>
+                <div class="mermaid">
+                    sequenceDiagram
+                        participant User
+                        participant StreamApp
+                        participant ImageProc
+                        participant PreprocessedImage
+
+                        Note over User, PreprocessedImage: Phase 1: Image Processing
+
+                        User->>StreamApp: Upload Medical Image
+                        StreamApp->>StreamApp: Process & Validate Image
+                        StreamApp->>ImageProc: Send Image
+                        ImageProc->>ImageProc: Quality Check
+                        ImageProc->>ImageProc: Eye Detection
+                        ImageProc->>ImageProc: Image Transformation
+                        ImageProc->>PreprocessedImage: Preprocessed Image
+
+                        Note over User, PreprocessedImage: Image preprocessing completed, ready for AI analysis
+                </div>
+            </div>
+
+            <!-- Phase 2: AI Models & Agents -->
+            <div class="diagram-section">
+                <h2 class="diagram-title">Phase 2: AI Models & Agents</h2>
+                <p class="diagram-description">
+                    AI processing phase where preprocessed images are analyzed by fine-tuned models (CNN, MLP, BLIP) 
+                    to generate classification results and medical descriptions, sent to AI agents.
+                </p>
+                <div class="mermaid">
+                    sequenceDiagram
+                        participant PreprocessedImage
+                        participant ParallelProcessing
+                        participant FineTunedCNN
+                        participant FineTunedMLP
+                        participant FineTunedBLIP
+                        participant AIAgents
+
+                        Note over PreprocessedImage, AIAgents: Phase 2: AI Models & Agents
+
+                        PreprocessedImage->>ParallelProcessing: Send Preprocessed Image
+                        ParallelProcessing->>FineTunedCNN: Fine-tuned CNN Classification
+                        ParallelProcessing->>FineTunedMLP: Fine-tuned MLP Analysis (Cholesterol Data)
+                        ParallelProcessing->>FineTunedBLIP: Fine-tuned BLIP Captioning (Image Description)
+                        FineTunedCNN->>AIAgents: Send Results & Descriptions
+                        FineTunedMLP->>AIAgents: Send Results & Descriptions
+                        FineTunedBLIP->>AIAgents: Send Results & Descriptions
+
+                        Note over PreprocessedImage, AIAgents: AI model analysis completed, results sent to agents
+                </div>
+            </div>
+
+            <!-- Phase 3: Specialized Medical Analysis -->
+            <div class="diagram-section">
+                <h2 class="diagram-title">Phase 3: Specialized Medical Analysis</h2>
+                <p class="diagram-description">
+                    Specialized analysis phase where AI agents perform symptom checking, risk assessment, and medical analysis. 
+                    This phase provides detailed medical insights and treatment recommendations based on the AI model results.
+                </p>
+                <div class="mermaid">
+                    sequenceDiagram
+                        participant AIAgents
+                        participant SymptomChecking
+                        participant RiskAssessment
+                        participant MedicalDatabase
+                        participant TreatmentAdvising
+                        participant ReturnAnalysisResults
+
+                        Note over AIAgents, ReturnAnalysisResults: Phase 3: Specialized Medical Analysis
+
+                        AIAgents->>SymptomChecking: Request Specialized Analysis
+                        SymptomChecking->>MedicalDatabase: Query Medical Knowledge Base
+                        MedicalDatabase->>SymptomChecking: Return Medical Data
+                        SymptomChecking->>RiskAssessment: Symptom Matching & Analysis
+                        RiskAssessment->>TreatmentAdvising: Risk Assessment (e.g., vital levels)
+                        TreatmentAdvising->>ReturnAnalysisResults: Treatment Recommendations
+                        ReturnAnalysisResults->>AIAgents: Return Analysis Results
+
+                        Note over AIAgents, ReturnAnalysisResults: Specialized medical analysis completed, ready for explainability
+                </div>
+            </div>
+
+            <!-- Phase 4: Explainability & Report Generation -->
+            <div class="diagram-section">
+                <h2 class="diagram-title">Phase 4: Explainability & Report Generation</h2>
+                <p class="diagram-description">
+                    Final phase involving explainability analysis and report generation. 
+                    This phase provides visual explanations and generates a comprehensive medical report.
+                </p>
+                <div class="mermaid">
+                    sequenceDiagram
+                        participant AIAgents
+                        participant ExplainabilityAnalysis
+                        participant ReportGenerator
+                        participant DisplayResults
+
+                        Note over AIAgents, DisplayResults: Phase 4: Explainability & Report Generation
+
+                        AIAgents->>ExplainabilityAnalysis: Request Explainability Analysis
+                        ExplainabilityAnalysis->>ExplainabilityAnalysis: LIME, Grad-CAM, SHAP Analysis
+                        ExplainabilityAnalysis->>ReportGenerator: Send Analysis Results
+                        ReportGenerator->>ReportGenerator: Generate Medical Report & Visuals
+                        ReportGenerator->>DisplayResults: Create PDF Report
+                        DisplayResults->>AIAgents: Display Results & Reports
+
+                        Note over AIAgents, DisplayResults: Complete workflow finished, medical report generated
+                </div>
+            </div>
+
+            <!-- Download Section -->
+            <div class="download-section">
+                <h3>📄 Research Paper Ready Diagrams</h3>
+                <p>These diagrams are optimized for research paper presentation with clear phase separation and focused workflows.</p>
+                <p><strong>System Features:</strong> Image Preprocessing, Fine-tuned AI Models, Specialized Medical Analysis, Explainability Tools, Report Generation</p>
+                <p><strong>4-Phase Workflow:</strong> Phase 1 (Image Processing) → Phase 2 (AI Models & Agents) → Phase 3 (Specialized Medical Analysis) → Phase 4 (Explainability & Report Generation)</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'default',
+            sequence: {
+                useMaxWidth: true,
+                diagramMarginX: 50,
+                diagramMarginY: 10,
+                actorMargin: 50,
+                width: 150,
+                height: 65,
+                boxMargin: 10,
+                boxTextMargin: 5,
+                noteMargin: 10,
+                messageMargin: 35,
+                mirrorActors: true,
+                bottomMarginAdj: 1,
+                useMaxWidth: true,
+                rightAngles: false,
+                showSequenceNumbers: false,
+                actorFontSize: 14,
+                noteFontSize: 14,
+                messageFontSize: 16
+            },
+            themeVariables: {
+                primaryColor: '#667eea',
+                primaryTextColor: '#fff',
+                primaryBorderColor: '#5a6fd8',
+                lineColor: '#2c3e50',
+                secondaryColor: '#764ba2',
+                tertiaryColor: '#f39c12'
+            }
+        });
+    </script>
+</body>
+</html>

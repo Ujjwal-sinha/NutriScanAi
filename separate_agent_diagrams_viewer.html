@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NutriScanAI - Agent Architecture Diagrams</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            margin: 0;
+            font-size: 2.5em;
+            font-weight: 300;
+        }
+        
+        .header p {
+            margin: 10px 0 0 0;
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        
+        .diagrams-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 30px;
+            padding: 40px;
+        }
+        
+        .diagram-section {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .diagram-section:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+        }
+        
+        .diagram-title {
+            color: #2c3e50;
+            font-size: 1.4em;
+            font-weight: 600;
+            margin: 0 0 20px 0;
+            text-align: center;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e9ecef;
+        }
+        
+        .diagram-content {
+            text-align: center;
+        }
+        
+        .diagram-content .mermaid {
+            text-align: left;
+            margin: 0 auto;
+            max-width: 100%;
+            overflow-x: auto;
+        }
+        
+        .description {
+            margin-top: 15px;
+            color: #6c757d;
+            font-size: 0.95em;
+            line-height: 1.5;
+        }
+        
+        .footer {
+            background: #f8f9fa;
+            padding: 20px;
+            text-align: center;
+            color: #6c757d;
+            border-top: 1px solid #e9ecef;
+        }
+        
+        @media (max-width: 768px) {
+            .diagrams-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .header p {
+                font-size: 1em;
+            }
+        }
+        
+        /* Mermaid Styling (if rendered by a library) */
+        .mermaid svg {
+            max-width: 100%;
+        }
+    </style>
+    <!-- Include Mermaid library for rendering diagrams -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <script>
+        mermaid.initialize({ startOnLoad: true });
+    </script>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>NutriScanAI</h1>
+            <p>Agent Architecture Diagrams</p>
+        </div>
+        
+        <div class="diagrams-grid">
+            <!-- 1. Medical AI Agent -->
+            <div class="diagram-section">
+                <h2 class="diagram-title">1. Medical AI Agent</h2>
+                <div class="diagram-content">
+                    <div class="mermaid">
+                        graph TB
+                        %% Medical AI Agent Details
+                        subgraph "Medical AI Agent"
+                            MA[Medical AI Agent]
+                            MA_API[API Key: GROQ]
+                            MA_LLM[LLM: llama3-8b-8192]
+                            MA_Memory[Conversation Memory]
+                            subgraph "Tool Integration"
+                                MA_Tools[Tool Integration]
+                                IT[Image Analysis Tool<br/>Input: image_description, detected_condition, confidence<br/>Output: severity, symptoms, recommendations]
+                                ST[Symptom Checker Tool<br/>Input: symptoms, detected_condition<br/>Output: symptom_match_percentage]
+                                TT[Treatment Advisor Tool<br/>Input: condition, severity<br/>Output: treatments, food_sources, urgency]
+                                RT[Risk Assessor Tool<br/>Input: condition, patient_data<br/>Output: risk_level, risk_factors]
+                            end
+                        end
+
+                        %% Connections
+                        MA --> MA_API
+                        MA --> MA_LLM
+                        MA --> MA_Memory
+                        MA --> MA_Tools
+                        MA_Tools --> IT
+                        MA_Tools --> ST
+                        MA_Tools --> TT
+                        MA_Tools --> RT
+
+                        %% Data Flow
+                        IT --> MA
+                        ST --> MA
+                        TT --> MA
+                        RT --> MA
+
+                        %% Styling
+                        classDef agentDetail fill:#fff3e0,stroke:#e65100,stroke-width:2px
+                        classDef toolDetail fill:#e8f5e8,stroke:#1b5e20,stroke-width:2px
+                        class MA,MA_API,MA_LLM,MA_Memory,MA_Tools agentDetail
+                        class IT,ST,TT,RT toolDetail
+                    </div>
+                    <div class="description">
+                        Central medical AI agent with GROQ integration, conversation memory, and detailed tool integration for image analysis, symptom checking, treatment advising, and risk assessment.
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. Research Assistant Agent -->
+            <div class="diagram-section">
+                <h2 class="diagram-title">2. Research Assistant Agent</h2>
+                <div class="diagram-content">
+                    <div class="mermaid">
+                        graph TB
+                        %% Research Assistant Agent Details
+                        subgraph "Research Assistant Agent"
+                            RA[Research Assistant Agent]
+                            RA_API[API Key: GROQ]
+                            RA_LLM[LLM: llama3-70b-8192]
+                            RA_Literature[Literature Search]
+                            RA_Evidence[Evidence Analysis]
+                        end
+
+                        %% Connections
+                        RA --> RA_API
+                        RA --> RA_LLM
+                        RA --> RA_Literature
+                        RA --> RA_Evidence
+
+                        %% Data Flow
+                        RA_Literature --> RA
+                        RA_Evidence --> RA
+
+                        %% Styling
+                        classDef agentDetail fill:#fff3e0,stroke:#e65100,stroke-width:2px
+                        class RA,RA_API,RA_LLM,RA_Literature,RA_Evidence agentDetail
+                    </div>
+                    <div class="description">
+                        Research capabilities powered by GROQ API and llama3-70b-8192 LLM, including literature search and evidence analysis for medical research support.
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. Data Analysis Agent -->
+            <div class="diagram-section">
+                <h2 class="diagram-title">3. Data Analysis Agent</h2>
+                <div class="diagram-content">
+                    <div class="mermaid">
+                        graph TB
+                        %% Data Analysis Agent Details
+                        subgraph "Data Analysis Agent"
+                            DA[Data Analysis Agent]
+                            DA_Trends[Trend Analysis]
+                            DA_Patterns[Pattern Recognition]
+                            DA_History[Patient History]
+                        end
+
+                        %% Connections
+                        DA --> DA_Trends
+                        DA --> DA_Patterns
+                        DA --> DA_History
+
+                        %% Data Flow
+                        DA_Trends --> DA
+                        DA_Patterns --> DA
+                        DA_History --> DA
+
+                        %% Styling
+                        classDef agentDetail fill:#fff3e0,stroke:#e65100,stroke-width:2px
+                        class DA,DA_Trends,DA_Patterns,DA_History agentDetail
+                    </div>
+                    <div class="description">
+                        Core data analysis capabilities including trend analysis, pattern recognition, and patient history management for comprehensive data insights.
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. Specialized Tools and Model Parameters -->
+            <div class="diagram-section">
+                <h2 class="diagram-title">4. Specialized Tools and Model Parameters</h2>
+                <div class="diagram-content">
+                    <div class="mermaid">
+                        graph TB
+                        %% Model Parameters
+                        subgraph "Model Parameters"
+                            CNN_Params[Fine-tuned<br/>CNN Parameters<br/>- Architecture: MobileNet V2<br/>- Input: 224x224x3<br/>- Classes: 6<br/>- Optimizer: Adam<br/>- Loss: CrossEntropy]
+                            MLP_Params[Fine-tuned<br/>MLP Parameters<br/>- Layers: 128 to 64 to 32 to 2<br/>- Dropout: 0.3, 0.2<br/>- Activation: ReLU<br/>- Input: Cholesterol features]
+                            BLIP_Params[Fine-tuned<br/>BLIP Parameters<br/>- Model: blip-image-captioning-base<br/>- Max Length: 100<br/>- Num Beams: 5<br/>- Device: MPS/CPU]
+                        end
+
+                        %% Styling
+                        classDef paramDetail fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
+                        class CNN_Params,MLP_Params,BLIP_Params paramDetail
+                    </div>
+                    <div class="description">
+                        Fine-tuned model parameters for CNN, MLP, and BLIP, supporting the specialized tools integrated within the Medical AI Agent.
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>NutriScanAI - AI-Powered Medical Image Analysis Platform</p>
+            <p>Generated from detailed agent connections and parameters architecture</p>
+        </div>
+    </div>
+</body>
+</html>
