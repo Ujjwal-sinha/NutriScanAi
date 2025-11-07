@@ -298,10 +298,11 @@ def generate_fallback_response(predicted_class: str, image_description: str, cnn
     """Generate a fallback response when LLM fails."""
     cnn_info = ""
     if cnn_detection and cnn_detection != "Model not available":
+        confidence_str = f"{confidence:.1%}" if isinstance(confidence, (int, float)) else "Not available"
         cnn_info = f"""
         **CNN Detection Results:**
         - Detected: {cnn_detection}
-        - Confidence: {confidence:.1% if confidence else 'Not available'}
+        - Confidence: {confidence_str}
         """
     
     if predicted_class == "vitamin_deficiency":
