@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NutriScanAI - System Architecture</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 2.5em;
+            font-weight: 300;
+        }
+        .header p {
+            margin: 10px 0 0 0;
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        .content {
+            padding: 30px;
+        }
+        .section {
+            margin-bottom: 40px;
+            padding: 20px;
+            border-radius: 10px;
+            background: #f8f9fa;
+            border-left: 5px solid #667eea;
+        }
+        .section h2 {
+            color: #667eea;
+            margin-top: 0;
+            font-size: 1.8em;
+        }
+        .section h3 {
+            color: #764ba2;
+            margin-top: 25px;
+            font-size: 1.4em;
+        }
+        .mermaid {
+            text-align: center;
+            margin: 20px 0;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .tech-stack {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .tech-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            border-left: 4px solid #667eea;
+        }
+        .tech-card h4 {
+            color: #667eea;
+            margin-top: 0;
+        }
+        .feature-list {
+            list-style: none;
+            padding: 0;
+        }
+        .feature-list li {
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .feature-list li:before {
+            content: "✓";
+            color: #2ecc71;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .metric-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .metric-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+        }
+        .metric-label {
+            color: #666;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔬 NutriScanAI</h1>
+            <p>End-to-end nutritional deficiency and retinal analysis platform with fine-tuned models, multi-agent reasoning, explainability, and secure reporting.</p>
+        </div>
+        
+        <div class="content">
+            <!-- System Overview -->
+            <div class="section">
+                <h2>📋 System Overview</h2>
+                <p>NutriScanAI delivers a cohesive medical imaging pipeline that blends Streamlit UI, preprocessing, fine-tuned CNN/MLP/BLIP models, GROQ-powered agents, and explainability to classify six nutrition-related conditions and provide actionable clinical insights.</p>
+                
+                <div class="metrics">
+                    <div class="metric-card">
+                        <div class="metric-value">6</div>
+                        <div class="metric-label">Condition Classes</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value">3</div>
+                        <div class="metric-label">Fine-tuned Models (CNN/MLP/BLIP)</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value">3</div>
+                        <div class="metric-label">Specialized Agents</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value">4</div>
+                        <div class="metric-label">Explainability Tools</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Architecture Diagram -->
+            <div class="section">
+                <h2>🏗️ System Architecture</h2>
+                <div class="mermaid">
+                    graph TB
+                        %% NutriScanAI - 6 Block System Architecture (No Subblocks)
+                        
+                        B1["1. User Interface Layer<br/>Streamlit Web App UI"]
+                        B2["2. Input & Data Processing<br/>Quality Check, Eye Detection, Transform"]
+                        B3["3. Fine-tuned AI Models<br/>CNN, MLP, BLIP Models"]
+                        B4["4. AI Agents & Tools<br/>Medical AI, Research, Data Analysis Agents"]
+                        B5["5. Explainability & Analytics<br/>LIME, Grad-CAM, SHAP, Metrics"]
+                        B6["6. Output & Reporting<br/>Medical Reports, PDF, Visualizations"]
+                        
+                        %% Simple linear flow
+                        B1 --> B2
+                        B2 --> B3
+                        B3 --> B4
+                        B4 --> B5
+                        B5 --> B6
+                        B6 --> B1
+                        
+                        %% Styling
+                        classDef block1 fill:#e1f5fe,stroke:#01579b,stroke-width:3px,color:#000,font-weight:bold
+                        classDef block2 fill:#f3e5f5,stroke:#4a148c,stroke-width:3px,color:#000,font-weight:bold
+                        classDef block3 fill:#e8f5e8,stroke:#1b5e20,stroke-width:3px,color:#000,font-weight:bold
+                        classDef block4 fill:#fff3e0,stroke:#e65100,stroke-width:3px,color:#000,font-weight:bold
+                        classDef block5 fill:#fce4ec,stroke:#880e4f,stroke-width:3px,color:#000,font-weight:bold
+                        classDef block6 fill:#fff8e1,stroke:#f57f17,stroke-width:3px,color:#000,font-weight:bold
+                        
+                        class B1 block1
+                        class B2 block2
+                        class B3 block3
+                        class B4 block4
+                        class B5 block5
+                        class B6 block6
+                </div>
+            </div>
+
+            <!-- Detailed Workflow -->
+            <div class="section">
+                <h2>🔄 Detailed Workflow</h2>
+                <div class="mermaid">
+                    flowchart TD
+                        Start([Start]) --> Upload[Upload Medical Image]
+                        Upload --> Preprocess[Preprocess & Validate<br/>Quality + Eye Detection]
+                        Preprocess --> Transform[Transform & Normalize]
+                        Transform --> CNNInfer[CNN Inference<br/>Vitamin classes]
+                        Transform --> MLPInfer[MLP Inference<br/>Cholesterol data]
+                        Transform --> BLIPInfer[BLIP Captioning<br/>Image description]
+                        
+                        CNNInfer --> Agents[Send features to Agents]
+                        MLPInfer --> Agents
+                        BLIPInfer --> Agents
+                        
+                        Agents --> Tools[Trigger Specialized Tools]
+                        Tools --> Analysis[Aggregate Clinical Analysis]
+                        Analysis --> Explain[Explainability<br/>LIME, Grad-CAM, IG, SHAP]
+                        Explain --> Report[Generate Report & PDF]
+                        Report --> Display[Display Results in Streamlit]
+                        Display --> End([End])
+                        
+                        %% Data Sources
+                        Dataset[dataset/<br/>6 condition folders] --> Preprocess
+                        CSV[CSV Data<br/>Cholesterol values] --> MLPInfer
+                        
+                        %% Styling
+                        classDef startEnd fill:#2ecc71,stroke:#27ae60,stroke-width:3px,color:#000
+                        classDef process fill:#3498db,stroke:#2980b9,stroke-width:2px,color:#000
+                        classDef model fill:#9b59b6,stroke:#8e44ad,stroke-width:2px,color:#000
+                        classDef agent fill:#e74c3c,stroke:#c0392b,stroke-width:2px,color:#000
+                        classDef explain fill:#1abc9c,stroke:#16a085,stroke-width:2px,color:#000
+                        classDef data fill:#f39c12,stroke:#e67e22,stroke-width:2px,color:#000
+                        
+                        class Start,End startEnd
+                        class Upload,Preprocess,Transform,Explain,Report,Display process
+                        class CNNInfer,MLPInfer,BLIPInfer model
+                        class Agents,Tools,Analysis agent
+                        class Dataset,CSV data
+                </div>
+            </div>
+
+            <!-- Multi-Agent Architecture -->
+            <div class="section">
+                <h2>🤖 Multi-Agent Architecture</h2>
+                
+                <!-- Agent Overview -->
+                <div class="mermaid">
+                    graph TB
+                        ORCH[Agent Orchestrator<br/>LangChain + GROQ]
+                        MA[Medical AI Agent<br/>llama3-8b-8192]
+                        RA[Research Assistant Agent<br/>llama3-70b-8192]
+                        DA[Data Analysis Agent<br/>Trends & history]
+                        
+                        ORCH --> MA
+                        ORCH --> RA
+                        ORCH --> DA
+                        MA --> ORCH
+                        RA --> ORCH
+                        DA --> ORCH
+                        
+                        %% Styling
+                        classDef orchestrator fill:#667eea,stroke:#4a5cc4,stroke-width:3px,color:#000
+                        classDef agent fill:#fff3e0,stroke:#e65100,stroke-width:2px,color:#000
+                        class ORCH orchestrator
+                        class MA,RA,DA agent
+                </div>
+                
+                <!-- Medical AI Agent -->
+                <div class="mermaid">
+                    graph TB
+                        subgraph MedAgent["Medical AI Agent"]
+                            MA[Medical AI Agent]
+                            MA_API[API Key: GROQ]
+                            MA_LLM[LLM: llama3-8b-8192]
+                            MA_Memory[Conversation Memory]
+                            subgraph Tools["Tool Integration"]
+                                IT[Image Analysis Tool]
+                                ST[Symptom Checker]
+                                TT[Treatment Advisor]
+                                RT[Risk Assessor]
+                            end
+                        end
+                        
+                        MA --> MA_API
+                        MA --> MA_LLM
+                        MA --> MA_Memory
+                        MA --> Tools
+                        Tools --> IT
+                        Tools --> ST
+                        Tools --> TT
+                        Tools --> RT
+                        IT --> MA
+                        ST --> MA
+                        TT --> MA
+                        RT --> MA
+                        
+                        classDef agent fill:#fff3e0,stroke:#e65100,stroke-width:2px,color:#000
+                        classDef tool fill:#e8f5e8,stroke:#1b5e20,stroke-width:2px,color:#000
+                        class MA,MA_API,MA_LLM,MA_Memory agent
+                        class IT,ST,TT,RT tool
+                </div>
+                
+                <!-- Research Assistant Agent -->
+                <div class="mermaid">
+                    graph TB
+                        subgraph Research["Research Assistant Agent"]
+                            RA[Research Assistant]
+                            RA_API[API Key: GROQ]
+                            RA_LLM[LLM: llama3-70b-8192]
+                            RA_Lit[Literature Search]
+                            RA_Ev[Evidence Analysis]
+                        end
+                        
+                        RA --> RA_API
+                        RA --> RA_LLM
+                        RA --> RA_Lit
+                        RA --> RA_Ev
+                        RA_Lit --> RA
+                        RA_Ev --> RA
+                        
+                        classDef agent fill:#fff3e0,stroke:#e65100,stroke-width:2px,color:#000
+                        class RA,RA_API,RA_LLM,RA_Lit,RA_Ev agent
+                </div>
+                
+                <!-- Data Analysis Agent -->
+                <div class="mermaid">
+                    graph TB
+                        subgraph DataAgent["Data Analysis Agent"]
+                            DA[Data Analysis Agent]
+                            DA_Trends[Trend Analysis]
+                            DA_Patterns[Pattern Recognition]
+                            DA_History[Patient History]
+                        end
+                        
+                        DA --> DA_Trends
+                        DA --> DA_Patterns
+                        DA --> DA_History
+                        DA_Trends --> DA
+                        DA_Patterns --> DA
+                        DA_History --> DA
+                        
+                        classDef agent fill:#fff3e0,stroke:#e65100,stroke-width:2px,color:#000
+                        class DA,DA_Trends,DA_Patterns,DA_History agent
+                </div>
+            </div>
+
+            <!-- Model Architecture -->
+            <div class="section">
+                <h2>🎯 Fine-tuned Model Architecture</h2>
+                <div class="mermaid">
+                    graph TB
+                        subgraph CNN_Model["Fine-tuned CNN (MobileNet V2)"]
+                            CNN_In[Input: 224x224x3]
+                            CNN_Conv[Conv2D + BN + ReLU]
+                            CNN_Core[MobileNet V2 Blocks]
+                            CNN_Pool[Global Avg Pool]
+                            CNN_Head[Classifier 1280 → 6 classes]
+                            CNN_Out[CNN Probabilities]
+                        end
+                        
+                        subgraph MLP_Model["Fine-tuned MLP"]
+                            MLP_In[Input: Cholesterol features]
+                            MLP_L1[Linear → 128]
+                            MLP_L2[Linear → 64]
+                            MLP_L3[Linear → 32]
+                            MLP_Out[Linear → 2]
+                        end
+                        
+                        subgraph BLIP_Model["Fine-tuned BLIP"]
+                            BLIP_In[Image + Text]
+                            BLIP_Enc[Vision Encoder]
+                            BLIP_Dec[Text Decoder]
+                            BLIP_Out[Caption Output]
+                        end
+                        
+                        subgraph Combined["Combined Analysis"]
+                            AGG["Feature Fusion<br/>CNN + MLP"]
+                            SCORE["Explainability + Scores"]
+                        end
+                        
+                        CNN_In --> CNN_Conv --> CNN_Core --> CNN_Pool --> CNN_Head --> CNN_Out
+                        MLP_In --> MLP_L1 --> MLP_L2 --> MLP_L3 --> MLP_Out
+                        BLIP_In --> BLIP_Enc --> BLIP_Dec --> BLIP_Out
+                        CNN_Out --> AGG
+                        MLP_Out --> AGG
+                        AGG --> SCORE
+                        
+                        classDef cnn fill:#e8f5e8,stroke:#1b5e20,stroke-width:2px,color:#000
+                        classDef mlp fill:#f3e5f5,stroke:#4a148c,stroke-width:2px,color:#000
+                        classDef blip fill:#fff3e0,stroke:#e65100,stroke-width:2px,color:#000
+                        classDef comb fill:#dbeafe,stroke:#1d4ed8,stroke-width:2px,color:#000
+                        
+                        class CNN_In,CNN_Conv,CNN_Core,CNN_Pool,CNN_Head,CNN_Out cnn
+                        class MLP_In,MLP_L1,MLP_L2,MLP_L3,MLP_Out mlp
+                        class BLIP_In,BLIP_Enc,BLIP_Dec,BLIP_Out blip
+                        class AGG,SCORE comb
+                </div>
+            </div>
+
+            <!-- Classification System -->
+            <div class="section">
+                <h2>🩺 Condition Classification System</h2>
+                <div class="mermaid">
+                    graph TB
+                        subgraph Classes["Supported Classes"]
+                            C0["Vitamin A"]
+                            C1["Vitamin B"]
+                            C2["Vitamin C"]
+                            C3["Vitamin D"]
+                            C4["Vitamin E"]
+                            C5["Retina Blood Vessel"]
+                        end
+                        
+                        subgraph Pipeline["Classification Pipeline"]
+                            FEAT["Feature Extraction<br/>CNN + BLIP"]
+                            FUSE["Feature Fusion<br/>CNN + MLP"]
+                            SCORE["Score & Confidence"]
+                            CLF["Class Assignment"]
+                        end
+                        
+                        subgraph Outcomes["Outcome Interpretation"]
+                            LOW["Low Risk / Normal"]
+                            MOD["Moderate Risk"]
+                            HIGH["High Risk / Needs Follow-up"]
+                        end
+                        
+                        C0 --> FEAT
+                        C1 --> FEAT
+                        C2 --> FEAT
+                        C3 --> FEAT
+                        C4 --> FEAT
+                        C5 --> FEAT
+                        
+                        FEAT --> FUSE --> SCORE --> CLF
+                        CLF --> LOW
+                        CLF --> MOD
+                        CLF --> HIGH
+                        
+                        classDef cls fill:#e1f5fe,stroke:#01579b,stroke-width:2px,color:#000
+                        classDef pipe fill:#f39c12,stroke:#e67e22,stroke-width:2px,color:#000
+                        classDef out fill:#2ecc71,stroke:#27ae60,stroke-width:2px,color:#000
+                        
+                        class C0,C1,C2,C3,C4,C5 cls
+                        class FEAT,FUSE,SCORE,CLF pipe
+                        class LOW,MOD,HIGH out
+                </div>
+            </div>
+
+            <!-- Technology Stack -->
+            <div class="section">
+                <h2>🛠️ Technology Stack</h2>
+                <div class="tech-stack">
+                    <div class="tech-card">
+                        <h4>🖥️ Frontend</h4>
+                        <ul class="feature-list">
+                            <li>Streamlit UI</li>
+                            <li>Mermaid for diagrams</li>
+                            <li>PIL/Pillow for image handling</li>
+                            <li>HTML/CSS modern layout</li>
+                        </ul>
+                    </div>
+                    <div class="tech-card">
+                        <h4>⚙️ Backend</h4>
+                        <ul class="feature-list">
+                            <li>Python</li>
+                            <li>PyTorch + Torchvision</li>
+                            <li>OpenCV</li>
+                            <li>NumPy & Pandas</li>
+                        </ul>
+                    </div>
+                    <div class="tech-card">
+                        <h4>🤖 AI/ML</h4>
+                        <ul class="feature-list">
+                            <li>Fine-tuned CNN (MobileNet V2)</li>
+                            <li>Fine-tuned MLP</li>
+                            <li>Fine-tuned BLIP</li>
+                            <li>LangChain + GROQ LLM</li>
+                        </ul>
+                    </div>
+                    <div class="tech-card">
+                        <h4>📊 Data & Reports</h4>
+                        <ul class="feature-list">
+                            <li>FPDF for PDF generation</li>
+                            <li>Seaborn/Matplotlib for plots</li>
+                            <li>Streamlit cache + temp storage</li>
+                            <li>CSV ingestion for cholesterol data</li>
+                        </ul>
+                    </div>
+                    <div class="tech-card">
+                        <h4>🔬 Explainable AI</h4>
+                        <ul class="feature-list">
+                            <li>LIME & SHAP</li>
+                            <li>Grad-CAM</li>
+                            <li>Integrated Gradients</li>
+                            <li>Attention-driven captions</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Performance Metrics -->
+            <div class="section">
+                <h2>📊 Performance & Monitoring</h2>
+                <div class="mermaid">
+                    graph LR
+                        ACC["Accuracy & F1<br/>per class"]
+                        INF["Inference Time<br/>per image"]
+                        MEM["Memory Usage<br/>CPU/GPU/MPS"]
+                        LAT["API Latency<br/>GROQ responses"]
+                        
+                        CFG["Config<br/>Epochs, LR, Batch"]
+                        CACHE["Cache Efficiency<br/>Streamlit cache hits"]
+                        QC["Quality Checks<br/>Input validation"]
+                        XAI["Explainability Coverage<br/>LIME/SHAP/Grad-CAM"]
+                        
+                        ACC --> XAI
+                        INF --> CACHE
+                        MEM --> CFG
+                        LAT --> QC
+                        
+                        classDef metric fill:#e3f2fd,stroke:#1565c0,stroke-width:2px,color:#000
+                        classDef system fill:#e8f5e8,stroke:#1b5e20,stroke-width:2px,color:#000
+                        
+                        class ACC,INF,MEM,LAT metric
+                        class CFG,CACHE,QC,XAI system
+                </div>
+            </div>
+
+            <!-- Security & Deployment -->
+            <div class="section">
+                <h2>🔒 Security & Deployment</h2>
+                <div class="mermaid">
+                    graph TB
+                        subgraph Security["Security"]
+                            ENV[Environment Variables<br/>API key isolation]
+                            VAL[Input Validation<br/>Type & size checks]
+                            ERR[Secure Error Handling<br/>No sensitive logs]
+                        end
+                        
+                        subgraph Deployment["Deployment"]
+                            DEP[Dependency Management<br/>requirements.txt]
+                            DEVICE[Device Selection<br/>MPS/CPU fallback]
+                            RES[Resource Optimization<br/>Batching & cache]
+                        end
+                        
+                        subgraph Monitoring["Monitoring"]
+                            LOG[Structured Logging]
+                            PERF[Performance Metrics]
+                            AGT[Agent Success Tracking]
+                            REC[Recovery & Retries]
+                        end
+                        
+                        ENV --> DEP
+                        VAL --> DEVICE
+                        ERR --> RES
+                        LOG --> PERF
+                        PERF --> AGT
+                        AGT --> REC
+                        
+                        classDef sec fill:#ffebee,stroke:#c62828,stroke-width:2px,color:#000
+                        classDef dep fill:#3498db,stroke:#2980b9,stroke-width:2px,color:#000
+                        classDef mon fill:#2ecc71,stroke:#27ae60,stroke-width:2px,color:#000
+                        
+                        class ENV,VAL,ERR sec
+                        class DEP,DEVICE,RES dep
+                        class LOG,PERF,AGT,REC mon
+                </div>
+            </div>
+
+            <!-- Future Enhancements -->
+            <div class="section">
+                <h2>🚀 Future Enhancements</h2>
+                <div class="mermaid">
+                    graph TB
+                        subgraph Product["Product Features"]
+                            MOB[Mobile Companion Apps]
+                            COLLAB[Real-time Collaboration]
+                            CLOUD[Cloud Deployment]
+                            PACS[PACS/EMR Integration]
+                        end
+                        
+                        subgraph Research["Research Tracks"]
+                            FED[Federated Learning]
+                            EDGE[Edge Inference]
+                            MULTI[Multi-modal (labs + images)]
+                            3D[3D Retinal Analysis]
+                        end
+                        
+                        subgraph Eng["Engineering"]
+                            PLUG[Plugin System for new models]
+                            OPT[Quantization & Pruning]
+                            TEST[Expanded Test Suite]
+                        end
+                        
+                        MOB --> CLOUD
+                        COLLAB --> CLOUD
+                        FED --> EDGE
+                        MULTI --> 3D
+                        PLUG --> OPT
+                        OPT --> TEST
+                        
+                        classDef prod fill:#3498db,stroke:#2980b9,stroke-width:2px,color:#000
+                        classDef res fill:#e74c3c,stroke:#c0392b,stroke-width:2px,color:#000
+                        classDef eng fill:#2ecc71,stroke:#27ae60,stroke-width:2px,color:#000
+                        
+                        class MOB,COLLAB,CLOUD,PACS prod
+                        class FED,EDGE,MULTI,3D res
+                        class PLUG,OPT,TEST eng
+                </div>
+            </div>
+
+            <!-- Medical Disclaimer -->
+            <div class="section">
+                <h2>⚕️ Medical Disclaimer</h2>
+                <p style="color: #e74c3c; font-weight: bold; font-size: 1.1em;">
+                    ⚠️ IMPORTANT: NutriScanAI is intended for research and educational use only.
+                </p>
+                <ul class="feature-list">
+                    <li>Consult licensed medical professionals for diagnosis or treatment</li>
+                    <li>Outputs are decision-support only, not definitive medical advice</li>
+                    <li>User data should remain local unless explicit consent is obtained</li>
+                    <li>No claims of clinical certification or FDA/CE approval</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'default',
+            flowchart: {
+                useMaxWidth: true,
+                htmlLabels: true,
+                curve: 'basis'
+            },
+            themeVariables: {
+                primaryColor: '#667eea',
+                primaryTextColor: '#000',
+                primaryBorderColor: '#4a5cc4',
+                lineColor: '#2c3e50',
+                secondaryColor: '#764ba2',
+                tertiaryColor: '#f39c12'
+            }
+        });
+    </script>
+</body>
+</html>
