@@ -40,6 +40,37 @@ try:
 except ImportError:
     IMAGE_COMBINED_XAI_AVAILABLE = False
 
+
+def build_and_cache_xai_grid_png(pil_image, classes, cnn_model=None, lime_samples=300):
+    """
+    Build the 2×2 explainability grid once (Original, Grad-CAM, LIME, Attention).
+    Called during analysis so the Explainability tab only displays cached bytes.
+    """
+    if not IMAGE_COMBINED_XAI_AVAILABLE or pil_image is None:
+        return None
+    m = cnn_model if cnn_model is not None else load_cnn_model(classes=classes)
+    if m is None:
+        return None
+    try:
+        pil = pil_image.copy() if hasattr(pil_image, "copy") else pil_image
+        if not isinstance(pil, Image.Image):
+            pil = Image.fromarray(np.asarray(pil)).convert("RGB")
+        else:
+            pil = pil.convert("RGB")
+        fig, _, _ = make_explanation_figure(
+            pil,
+            m,
+            classes,
+            lime_samples=lime_samples,
+            layout_four=False,
+            include_shap=False,
+            include_prediction_summary=False,
+        )
+        return figure_to_png_bytes(fig)
+    except Exception:
+        return None
+
+
 # Import AI agents
 try:
     from agents import MedicalAIAgent, ResearchAssistantAgent, DataAnalysisAgent, create_agent_instance, get_agent_recommendations
@@ -1820,9 +1851,13 @@ if st.button("🔬 Start Analysis", type="primary", use_container_width=True, ke
                         "quality_score": quality_score,
                         "cnn_prediction": predicted_class,
                         "cnn_confidence": confidence,
-                        "agent_analysis": agent_analysis
+                        "agent_analysis": agent_analysis,
                     }
-                    
+                    with st.spinner("Saving explainability grid with your report (one-time)…"):
+                        st.session_state.report_data["xai_grid_png"] = build_and_cache_xai_grid_png(
+                            image, classes, cnn_model=model, lime_samples=300
+                        )
+
                     if debug_mode:
                         st.success("✅ Vitamin deficiency analysis completed!")
                     
@@ -1921,9 +1956,13 @@ if st.button("🔬 Start Analysis", type="primary", use_container_width=True, ke
                         "image_description": image_description,
                         "quality_score": quality_score,
                         "cnn_prediction": predicted_class,
-                        "cnn_confidence": confidence
+                        "cnn_confidence": confidence,
                     }
-                    
+                    with st.spinner("Saving explainability grid with your report (one-time)…"):
+                        st.session_state.report_data["xai_grid_png"] = build_and_cache_xai_grid_png(
+                            image, classes, cnn_model=None, lime_samples=300
+                        )
+
                     if debug_mode:
                         st.success("✅ Retina blood vessel analysis completed!")
                     
@@ -2056,9 +2095,13 @@ if st.button("🔬 Start Analysis", type="primary", use_container_width=True, ke
                         "image_description": image_description,
                         "quality_score": quality_score,
                         "cnn_prediction": predicted_class,
-                        "cnn_confidence": confidence
+                        "cnn_confidence": confidence,
                     }
-                    
+                    with st.spinner("Saving explainability grid with your report (one-time)…"):
+                        st.session_state.report_data["xai_grid_png"] = build_and_cache_xai_grid_png(
+                            image, classes, cnn_model=model, lime_samples=300
+                        )
+
                     if debug_mode:
                         st.success("✅ Combined analysis completed!")
                     
@@ -2937,71 +2980,36 @@ if st.button("🔬 Start Analysis", type="primary", use_container_width=True, ke
                 st.markdown("""
                 <div style="background: linear-gradient(135deg, #ebf8ff 0%, #bee3f8 100%); padding: 1rem; border-radius: 10px; margin-bottom: 1rem; border-left: 4px solid #3182ce;">
                     <h5 style="color: #2d3748; margin-bottom: 0.5rem;">🖼️ Explainability grid</h5>
-                    <p style="color: #4a5568; font-size: 0.9rem; margin: 0;">One <strong>2×2</strong> figure from the analyzed image: <strong>Original</strong>, <strong>Grad-CAM</strong>, <strong>LIME</strong>, and <strong>attention map</strong>. SHAP is not used here. No prediction summary panel.</p>
+                    <p style="color: #4a5568; font-size: 0.9rem; margin: 0;">One <strong>2×2</strong> figure: <strong>Original</strong>, <strong>Grad-CAM</strong>, <strong>LIME</strong>, <strong>attention</strong>. It is built <strong>once</strong> when you run analysis (same pipeline as <code>image.py</code>) and shown here instantly — nothing is recomputed when you open this tab.</p>
                 </div>
                 """, unsafe_allow_html=True)
 
                 if not IMAGE_COMBINED_XAI_AVAILABLE:
                     st.warning("Explainability grid module could not be loaded. Ensure `image.py` is in the project root.")
                 else:
-                    frame_src = None
-                    if st.session_state.report_data and st.session_state.report_data.get("image") is not None:
-                        frame_src = st.session_state.report_data["image"]
-                    elif image is not None:
-                        frame_src = image
-
-                    if frame_src is None:
-                        st.info("No image found. Run an analysis first so the report image is available.")
+                    grid_png = (
+                        st.session_state.report_data.get("xai_grid_png")
+                        if st.session_state.report_data
+                        else None
+                    )
+                    if grid_png:
+                        try:
+                            st.image(
+                                grid_png,
+                                caption="Original · Grad-CAM · LIME · Attention (cached with your report)",
+                                use_container_width=True,
+                            )
+                        except TypeError:
+                            st.image(
+                                grid_png,
+                                caption="Original · Grad-CAM · LIME · Attention (cached with your report)",
+                                use_column_width=True,
+                            )
                     else:
-                        pil_frame = frame_src.copy() if hasattr(frame_src, "copy") else frame_src
-                        if not isinstance(pil_frame, Image.Image):
-                            pil_frame = Image.fromarray(np.asarray(pil_frame)).convert("RGB")
-                        else:
-                            pil_frame = pil_frame.convert("RGB")
-
-                        lime_frame = st.slider(
-                            "LIME samples",
-                            min_value=200,
-                            max_value=1200,
-                            value=400,
-                            step=100,
-                            key="nutriscan_combined_xai_lime",
+                        st.info(
+                            "No cached grid for this report. It is created when analysis finishes "
+                            "(needs a working CNN and `image.py`). Run **Start Analysis** again, or check that the model loaded."
                         )
-
-                        if st.button("Build grid", type="primary", key="nutriscan_combined_xai_build"):
-                            cnn = load_cnn_model(classes=classes)
-                            if cnn is None:
-                                st.error("CNN model is not available.")
-                            else:
-                                with st.spinner("Building 2×2 explainability grid…"):
-                                    try:
-                                        fig, _, _ = make_explanation_figure(
-                                            pil_frame,
-                                            cnn,
-                                            classes,
-                                            lime_samples=lime_frame,
-                                            layout_four=False,
-                                            include_shap=False,
-                                            include_prediction_summary=False,
-                                        )
-                                        png = figure_to_png_bytes(fig)
-                                        st.session_state["nutriscan_combined_xai_png"] = png
-                                    except Exception as e:
-                                        st.error(f"Could not build grid: {e}")
-
-                        if st.session_state.get("nutriscan_combined_xai_png"):
-                            try:
-                                st.image(
-                                    st.session_state["nutriscan_combined_xai_png"],
-                                    caption="Original · Grad-CAM · LIME · Attention",
-                                    use_container_width=True,
-                                )
-                            except TypeError:
-                                st.image(
-                                    st.session_state["nutriscan_combined_xai_png"],
-                                    caption="Original · Grad-CAM · LIME · Attention",
-                                    use_column_width=True,
-                                )
 
         with main_tab4:
             # Medical Report Tab
