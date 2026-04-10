@@ -95,202 +95,507 @@
     <div class="container">
         <div class="header">
             <h1>🔬 NutriScanAI</h1>
-            <p>Complete Architecture Block Diagram (10 Main Blocks)</p>
+            <p>Multi-Encoder Fusion Architecture with AI Agent</p>
         </div>
 
         <div class="content">
             <div class="diagram-container">
                 <div class="mermaid">
 graph TB
-    %% User Interface Block
-    subgraph "1. User Interface"
-        UI[Streamlit Web App<br/>Image Upload & Cropping<br/>Analysis Settings<br/>Results Display]
+    %% Input Layer
+    subgraph INPUT["📥 Input Layer"]
+        IMG[Medical Image Input<br/>Preprocessed Data<br/>Quality Validated]
     end
 
-    %% Input Processing Block
-    subgraph "2. Input Processing"
-        IP[Image Preprocessing<br/>Quality Check<br/>Eye Detection<br/>Data Validation]
+    %% Three Encoders with CNN Models
+    subgraph ENC["🔷 Multi-Encoder Architecture"]
+        direction TB
+        subgraph E1["Encoder 1: Texture & Pattern Analysis"]
+            E1_CNN[PatternNet CNN<br/>Texture Recognition<br/>Pattern Detection<br/>Surface Analysis<br/>Micro-feature Extraction]
+        end
+        subgraph E2["Encoder 2: Color & Intensity Analysis"]
+            E2_CNN[ChromaNet CNN<br/>Color Distribution<br/>Intensity Mapping<br/>Pigmentation Analysis<br/>Spectral Feature Detection]
+        end
+        subgraph E3["Encoder 3: Spatial & Structural Analysis"]
+            E3_CNN[StructNet CNN<br/>Spatial Relationships<br/>Structural Patterns<br/>Geometric Features<br/>Anatomical Mapping]
+        end
     end
 
-    %% AI Models Block
-    subgraph "3. Fine-tuned AI Models"
-        AI[Fine-tuned CNN Model<br/>Fine-tuned MobileNet V2<br/>Fine-tuned MLP Model<br/>Fine-tuned BLIP Model<br/>Combined Analysis]
+    %% Fusion Model
+    subgraph FUSION["🔀 Fusion Model"]
+        FM[Multi-Modal Fusion<br/>Feature Concatenation<br/>Attention Mechanism<br/>Weighted Integration]
     end
 
-    %% AI Agents Block
-    subgraph "4. AI Agents"
-        AG[Medical AI Agent<br/>Research Assistant<br/>Data Analysis Agent<br/>Tool Integration]
+    %% AI Agent
+    subgraph AGENT["🤖 NutriScanAI Medical Agent"]
+        AG[Multi-Modal Disease Diagnosis<br/>Anomaly Detection Engine<br/>Clinical Context Analyzer<br/>Evidence-Based Reasoning]
     end
 
-    %% Analysis Tools Block
-    subgraph "5. Analysis Tools"
-        AT[Medical Image Analysis<br/>Symptom Checker<br/>Treatment Advisor<br/>Risk Assessor]
+    %% Consensus & Classification
+    subgraph CONSENSUS["⚖️ Consensus & Classification Layer"]
+        CC[Ensemble Voting<br/>Confidence Scoring<br/>Disease Classification<br/>Probability Distribution]
     end
 
-    %% Explainability Block
-    subgraph "6. Explainability"
-        EX[LIME Analysis<br/>Grad-CAM<br/>Integrated Gradients<br/>SHAP Analysis]
+    %% Output with App Features
+    subgraph OUTPUT["📱 Output Layer with App Features"]
+        direction TB
+        OUT1[Disease Diagnosis<br/>Confidence Score<br/>Risk Assessment]
+        OUT2[Interactive Dashboard<br/>Visual Reports<br/>Real-time Updates]
+        OUT3[Export Features<br/>PDF Reports<br/>Data Export]
+        OUT4[User Notifications<br/>Alerts & Recommendations<br/>Follow-up Suggestions]
     end
 
-    %% Data Management Block
-    subgraph "7. Data Management"
-        DM[Dataset Management<br/>Model Storage<br/>Cache System<br/>Temporary Files]
-    end
-
-    %% External Services Block
-    subgraph "8. External Services"
-        ES[GROQ API<br/>LangChain Framework<br/>OpenCV Libraries<br/>PyTorch Framework]
-    end
-
-    %% Output Generation Block
-    subgraph "9. Output Generation"
-        OG[Medical Reports<br/>PDF Generation<br/>Performance Metrics<br/>Data Visualization]
-    end
-
-    %% Security & Compliance Block
-    subgraph "10. Security & Compliance"
-        SC[Data Privacy<br/>HIPAA Compliance<br/>Error Handling<br/>Fallback Mechanisms]
-    end
-
-    %% Main Flow Connections
-    UI --> IP
-    IP --> AI
-    AI --> AG
-    AG --> AT
-    AT --> EX
-    EX --> OG
+    %% Main Flow
+    IMG --> E1_CNN
+    IMG --> E2_CNN
+    IMG --> E3_CNN
     
-    %% Supporting Connections
-    DM --> AI
-    ES --> AG
-    ES --> AT
-    SC --> IP
-    SC --> OG
+    E1_CNN --> FM
+    E2_CNN --> FM
+    E3_CNN --> FM
     
-    %% Cross-connections
-    AI --> EX
-    AG --> EX
-    AT --> OG
-    DM --> OG
+    FM --> AG
+    AG --> CC
+    CC --> OUT1
+    CC --> OUT2
+    CC --> OUT3
+    CC --> OUT4
+
+    %% Feedback Connections
+    AG -.->|Feedback| FM
+    CC -.->|Validation| AG
 
     %% Styling
-    classDef userBlock fill:#e1f5fe,stroke:#01579b,stroke-width:3px
-    classDef processingBlock fill:#f3e5f5,stroke:#4a148c,stroke-width:3px
-    classDef modelBlock fill:#e8f5e8,stroke:#1b5e20,stroke-width:3px
-    classDef agentBlock fill:#fff3e0,stroke:#e65100,stroke-width:3px
-    classDef toolBlock fill:#fce4ec,stroke:#880e4f,stroke-width:3px
-    classDef explainBlock fill:#f1f8e9,stroke:#33691e,stroke-width:3px
-    classDef dataBlock fill:#fafafa,stroke:#424242,stroke-width:3px
-    classDef serviceBlock fill:#e0f2f1,stroke:#004d40,stroke-width:3px
-    classDef outputBlock fill:#fff8e1,stroke:#f57f17,stroke-width:3px
-    classDef securityBlock fill:#ffebee,stroke:#c62828,stroke-width:3px
+    classDef inputStyle fill:#e3f2fd,stroke:#1976d2,stroke-width:3px,color:#000
+    classDef encoder1Style fill:#e8f5e9,stroke:#2e7d32,stroke-width:3px,color:#000
+    classDef encoder2Style fill:#fff3e0,stroke:#f57c00,stroke-width:3px,color:#000
+    classDef encoder3Style fill:#f3e5f5,stroke:#7b1fa2,stroke-width:3px,color:#000
+    classDef fusionStyle fill:#fff3e0,stroke:#f57c00,stroke-width:3px,color:#000
+    classDef agentStyle fill:#fce4ec,stroke:#c2185b,stroke-width:3px,color:#000
+    classDef consensusStyle fill:#e8eaf6,stroke:#3f51b5,stroke-width:3px,color:#000
+    classDef outputStyle fill:#fff8e1,stroke:#f9a825,stroke-width:3px,color:#000
 
-    class UI userBlock
-    class IP processingBlock
-    class AI modelBlock
-    class AG agentBlock
-    class AT toolBlock
-    class EX explainBlock
-    class DM dataBlock
-    class ES serviceBlock
-    class OG outputBlock
-    class SC securityBlock
+    class IMG inputStyle
+    class E1_CNN encoder1Style
+    class E2_CNN encoder2Style
+    class E3_CNN encoder3Style
+    class FM fusionStyle
+    class AG agentStyle
+    class CC consensusStyle
+    class OUT1,OUT2,OUT3,OUT4 outputStyle
+                </div>
+            </div>
+
+            <div class="diagram-container" style="margin-top: 30px;">
+                <h2 style="text-align: center; color: #2c3e50; margin-bottom: 20px;">🔷 Detailed CNN Architecture Breakdown</h2>
+                
+                <h3 style="text-align: center; color: #2e7d32; margin: 30px 0 15px 0;">PatternNet CNN - Texture & Pattern Analysis</h3>
+                <div class="mermaid">
+graph TB
+    subgraph PNET["PatternNet CNN Architecture"]
+        direction TB
+        IN1[Input Image<br/>224x224x3]
+        
+        %% Conv Block 1
+        CONV1[Conv2D<br/>Kernel: 7x7<br/>Filters: 64<br/>Stride: 2]
+        BN1[BatchNorm]
+        RELU1[ReLU Activation]
+        POOL1[MaxPool2D<br/>Kernel: 3x3<br/>Stride: 2]
+        
+        %% Conv Block 2
+        CONV2[Conv2D<br/>Kernel: 5x5<br/>Filters: 128<br/>Stride: 1]
+        BN2[BatchNorm]
+        RELU2[ReLU Activation]
+        POOL2[MaxPool2D<br/>Kernel: 2x2<br/>Stride: 2]
+        
+        %% Conv Block 3
+        CONV3[Conv2D<br/>Kernel: 3x3<br/>Filters: 256<br/>Stride: 1<br/>Padding: Same]
+        BN3[BatchNorm]
+        RELU3[ReLU Activation]
+        CONV3B[Conv2D<br/>Kernel: 3x3<br/>Filters: 256<br/>Stride: 1<br/>Padding: Same]
+        BN3B[BatchNorm]
+        RELU3B[ReLU Activation]
+        POOL3[MaxPool2D<br/>Kernel: 2x2<br/>Stride: 2]
+        
+        %% Conv Block 4
+        CONV4[Conv2D<br/>Kernel: 3x3<br/>Filters: 512<br/>Stride: 1<br/>Padding: Same]
+        BN4[BatchNorm]
+        RELU4[ReLU Activation]
+        DROP1[Dropout 0.3]
+        CONV4B[Conv2D<br/>Kernel: 3x3<br/>Filters: 512<br/>Stride: 1<br/>Padding: Same]
+        BN4B[BatchNorm]
+        RELU4B[ReLU Activation]
+        POOL4[GlobalAvgPool2D]
+        
+        %% Output
+        FLAT1[Flatten]
+        DENSE1[Dense Layer<br/>512 units]
+        RELU5[ReLU Activation]
+        DROP2[Dropout 0.5]
+        OUT1[Feature Vector<br/>512 dim]
+        
+        IN1 --> CONV1
+        CONV1 --> BN1
+        BN1 --> RELU1
+        RELU1 --> POOL1
+        POOL1 --> CONV2
+        CONV2 --> BN2
+        BN2 --> RELU2
+        RELU2 --> POOL2
+        POOL2 --> CONV3
+        CONV3 --> BN3
+        BN3 --> RELU3
+        RELU3 --> CONV3B
+        CONV3B --> BN3B
+        BN3B --> RELU3B
+        RELU3B --> POOL3
+        POOL3 --> CONV4
+        CONV4 --> BN4
+        BN4 --> RELU4
+        RELU4 --> DROP1
+        DROP1 --> CONV4B
+        CONV4B --> BN4B
+        BN4B --> RELU4B
+        RELU4B --> POOL4
+        POOL4 --> FLAT1
+        FLAT1 --> DENSE1
+        DENSE1 --> RELU5
+        RELU5 --> DROP2
+        DROP2 --> OUT1
+    end
+    
+    classDef convStyle fill:#c8e6c9,stroke:#2e7d32,stroke-width:2px
+    classDef normStyle fill:#fff9c4,stroke:#f57f17,stroke-width:2px
+    classDef actStyle fill:#ffccbc,stroke:#e64a19,stroke-width:2px
+    classDef poolStyle fill:#b3e5fc,stroke:#0277bd,stroke-width:2px
+    classDef denseStyle fill:#f8bbd0,stroke:#c2185b,stroke-width:2px
+    classDef outStyle fill:#d1c4e9,stroke:#512da8,stroke-width:3px
+    
+    class CONV1,CONV2,CONV3,CONV3B,CONV4,CONV4B convStyle
+    class BN1,BN2,BN3,BN3B,BN4,BN4B normStyle
+    class RELU1,RELU2,RELU3,RELU3B,RELU4,RELU4B,RELU5 actStyle
+    class POOL1,POOL2,POOL3,POOL4 poolStyle
+    class DENSE1 denseStyle
+    class OUT1 outStyle
+                </div>
+                
+                <h3 style="text-align: center; color: #f57c00; margin: 30px 0 15px 0;">ChromaNet CNN - Color & Intensity Analysis</h3>
+                <div class="mermaid">
+graph TB
+    subgraph CNET["ChromaNet CNN Architecture"]
+        direction TB
+        IN2[Input Image<br/>224x224x3]
+        
+        %% Conv Block 1
+        CONV1C[Conv2D<br/>Kernel: 5x5<br/>Filters: 96<br/>Stride: 1]
+        BN1C[BatchNorm]
+        RELU1C[ReLU Activation]
+        POOL1C[MaxPool2D<br/>Kernel: 3x3<br/>Stride: 2]
+        
+        %% Conv Block 2
+        CONV2C[Conv2D<br/>Kernel: 3x3<br/>Filters: 192<br/>Stride: 1<br/>Padding: Same]
+        BN2C[BatchNorm]
+        RELU2C[ReLU Activation]
+        CONV2CB[Conv2D<br/>Kernel: 3x3<br/>Filters: 192<br/>Stride: 1<br/>Padding: Same]
+        BN2CB[BatchNorm]
+        RELU2CB[ReLU Activation]
+        POOL2C[MaxPool2D<br/>Kernel: 2x2<br/>Stride: 2]
+        
+        %% Conv Block 3
+        CONV3C[Conv2D<br/>Kernel: 3x3<br/>Filters: 384<br/>Stride: 1<br/>Padding: Same]
+        BN3C[BatchNorm]
+        RELU3C[ReLU Activation]
+        CONV3CB[Conv2D<br/>Kernel: 3x3<br/>Filters: 384<br/>Stride: 1<br/>Padding: Same]
+        BN3CB[BatchNorm]
+        RELU3CB[ReLU Activation]
+        POOL3C[MaxPool2D<br/>Kernel: 2x2<br/>Stride: 2]
+        
+        %% Conv Block 4
+        CONV4C[Conv2D<br/>Kernel: 3x3<br/>Filters: 512<br/>Stride: 1<br/>Padding: Same]
+        BN4C[BatchNorm]
+        RELU4C[ReLU Activation]
+        DROP1C[Dropout 0.4]
+        CONV4CB[Conv2D<br/>Kernel: 3x3<br/>Filters: 512<br/>Stride: 1<br/>Padding: Same]
+        BN4CB[BatchNorm]
+        RELU4CB[ReLU Activation]
+        POOL4C[GlobalAvgPool2D]
+        
+        %% Output
+        FLAT2[Flatten]
+        DENSE1C[Dense Layer<br/>512 units]
+        RELU5C[ReLU Activation]
+        DROP2C[Dropout 0.5]
+        OUT2[Feature Vector<br/>512 dim]
+        
+        IN2 --> CONV1C
+        CONV1C --> BN1C
+        BN1C --> RELU1C
+        RELU1C --> POOL1C
+        POOL1C --> CONV2C
+        CONV2C --> BN2C
+        BN2C --> RELU2C
+        RELU2C --> CONV2CB
+        CONV2CB --> BN2CB
+        BN2CB --> RELU2CB
+        RELU2CB --> POOL2C
+        POOL2C --> CONV3C
+        CONV3C --> BN3C
+        BN3C --> RELU3C
+        RELU3C --> CONV3CB
+        CONV3CB --> BN3CB
+        BN3CB --> RELU3CB
+        RELU3CB --> POOL3C
+        POOL3C --> CONV4C
+        CONV4C --> BN4C
+        BN4C --> RELU4C
+        RELU4C --> DROP1C
+        DROP1C --> CONV4CB
+        CONV4CB --> BN4CB
+        BN4CB --> RELU4CB
+        RELU4CB --> POOL4C
+        POOL4C --> FLAT2
+        FLAT2 --> DENSE1C
+        DENSE1C --> RELU5C
+        RELU5C --> DROP2C
+        DROP2C --> OUT2
+    end
+    
+    classDef convStyle fill:#ffe0b2,stroke:#f57c00,stroke-width:2px
+    classDef normStyle fill:#fff9c4,stroke:#f57f17,stroke-width:2px
+    classDef actStyle fill:#ffccbc,stroke:#e64a19,stroke-width:2px
+    classDef poolStyle fill:#b3e5fc,stroke:#0277bd,stroke-width:2px
+    classDef denseStyle fill:#f8bbd0,stroke:#c2185b,stroke-width:2px
+    classDef outStyle fill:#d1c4e9,stroke:#512da8,stroke-width:3px
+    
+    class CONV1C,CONV2C,CONV2CB,CONV3C,CONV3CB,CONV4C,CONV4CB convStyle
+    class BN1C,BN2C,BN2CB,BN3C,BN3CB,BN4C,BN4CB normStyle
+    class RELU1C,RELU2C,RELU2CB,RELU3C,RELU3CB,RELU4C,RELU4CB,RELU5C actStyle
+    class POOL1C,POOL2C,POOL3C,POOL4C poolStyle
+    class DENSE1C denseStyle
+    class OUT2 outStyle
+                </div>
+                
+                <h3 style="text-align: center; color: #7b1fa2; margin: 30px 0 15px 0;">StructNet CNN - Spatial & Structural Analysis</h3>
+                <div class="mermaid">
+graph TB
+    subgraph SNET["StructNet CNN Architecture"]
+        direction TB
+        IN3[Input Image<br/>224x224x3]
+        
+        %% Conv Block 1
+        CONV1S[Conv2D<br/>Kernel: 11x11<br/>Filters: 64<br/>Stride: 4]
+        BN1S[BatchNorm]
+        RELU1S[ReLU Activation]
+        POOL1S[MaxPool2D<br/>Kernel: 3x3<br/>Stride: 2]
+        
+        %% Conv Block 2
+        CONV2S[Conv2D<br/>Kernel: 5x5<br/>Filters: 192<br/>Stride: 1<br/>Padding: Same]
+        BN2S[BatchNorm]
+        RELU2S[ReLU Activation]
+        POOL2S[MaxPool2D<br/>Kernel: 3x3<br/>Stride: 2]
+        
+        %% Conv Block 3
+        CONV3S[Conv2D<br/>Kernel: 3x3<br/>Filters: 384<br/>Stride: 1<br/>Padding: Same]
+        BN3S[BatchNorm]
+        RELU3S[ReLU Activation]
+        CONV3SB[Conv2D<br/>Kernel: 3x3<br/>Filters: 384<br/>Stride: 1<br/>Padding: Same]
+        BN3SB[BatchNorm]
+        RELU3SB[ReLU Activation]
+        CONV3SC[Conv2D<br/>Kernel: 3x3<br/>Filters: 256<br/>Stride: 1<br/>Padding: Same]
+        BN3SC[BatchNorm]
+        RELU3SC[ReLU Activation]
+        POOL3S[MaxPool2D<br/>Kernel: 3x3<br/>Stride: 2]
+        
+        %% Conv Block 4
+        CONV4S[Conv2D<br/>Kernel: 3x3<br/>Filters: 512<br/>Stride: 1<br/>Padding: Same]
+        BN4S[BatchNorm]
+        RELU4S[ReLU Activation]
+        DROP1S[Dropout 0.3]
+        CONV4SB[Conv2D<br/>Kernel: 3x3<br/>Filters: 512<br/>Stride: 1<br/>Padding: Same]
+        BN4SB[BatchNorm]
+        RELU4SB[ReLU Activation]
+        POOL4S[GlobalAvgPool2D]
+        
+        %% Output
+        FLAT3[Flatten]
+        DENSE1S[Dense Layer<br/>512 units]
+        RELU5S[ReLU Activation]
+        DROP2S[Dropout 0.5]
+        OUT3[Feature Vector<br/>512 dim]
+        
+        IN3 --> CONV1S
+        CONV1S --> BN1S
+        BN1S --> RELU1S
+        RELU1S --> POOL1S
+        POOL1S --> CONV2S
+        CONV2S --> BN2S
+        BN2S --> RELU2S
+        RELU2S --> POOL2S
+        POOL2S --> CONV3S
+        CONV3S --> BN3S
+        BN3S --> RELU3S
+        RELU3S --> CONV3SB
+        CONV3SB --> BN3SB
+        BN3SB --> RELU3SB
+        RELU3SB --> CONV3SC
+        CONV3SC --> BN3SC
+        BN3SC --> RELU3SC
+        RELU3SC --> POOL3S
+        POOL3S --> CONV4S
+        CONV4S --> BN4S
+        BN4S --> RELU4S
+        RELU4S --> DROP1S
+        DROP1S --> CONV4SB
+        CONV4SB --> BN4SB
+        BN4SB --> RELU4SB
+        RELU4SB --> POOL4S
+        POOL4S --> FLAT3
+        FLAT3 --> DENSE1S
+        DENSE1S --> RELU5S
+        RELU5S --> DROP2S
+        DROP2S --> OUT3
+    end
+    
+    classDef convStyle fill:#e1bee7,stroke:#7b1fa2,stroke-width:2px
+    classDef normStyle fill:#fff9c4,stroke:#f57f17,stroke-width:2px
+    classDef actStyle fill:#ffccbc,stroke:#e64a19,stroke-width:2px
+    classDef poolStyle fill:#b3e5fc,stroke:#0277bd,stroke-width:2px
+    classDef denseStyle fill:#f8bbd0,stroke:#c2185b,stroke-width:2px
+    classDef outStyle fill:#d1c4e9,stroke:#512da8,stroke-width:3px
+    
+    class CONV1S,CONV2S,CONV3S,CONV3SB,CONV3SC,CONV4S,CONV4SB convStyle
+    class BN1S,BN2S,BN3S,BN3SB,BN3SC,BN4S,BN4SB normStyle
+    class RELU1S,RELU2S,RELU3S,RELU3SB,RELU3SC,RELU4S,RELU4SB,RELU5S actStyle
+    class POOL1S,POOL2S,POOL3S,POOL4S poolStyle
+    class DENSE1S denseStyle
+    class OUT3 outStyle
                 </div>
             </div>
 
             <div class="description">
-                <h2>📋 Block Descriptions</h2>
+                <h2>📋 Architecture Components</h2>
                 <div class="block-grid">
                     <div class="block-item">
-                        <h3>1. User Interface</h3>
+                        <h3>📥 Input Layer</h3>
                         <ul>
-                            <li>Streamlit Web App</li>
-                            <li>Image Upload & Cropping</li>
-                            <li>Analysis Settings</li>
-                            <li>Results Display</li>
+                            <li>Medical Image Input</li>
+                            <li>Preprocessed Data</li>
+                            <li>Quality Validation</li>
+                            <li>Data Normalization</li>
                         </ul>
                     </div>
                     <div class="block-item">
-                        <h3>2. Input Processing</h3>
+                        <h3>🔷 Multi-Encoder Architecture</h3>
                         <ul>
-                            <li>Image Preprocessing</li>
-                            <li>Quality Check</li>
-                            <li>Eye Detection</li>
-                            <li>Data Validation</li>
+                            <li><strong>Encoder 1 - PatternNet CNN:</strong> Specialized CNN for detecting surface textures, patterns, and micro-features. Identifies fine-grained structural details and repetitive patterns in medical images.</li>
+                            <li><strong>Encoder 2 - ChromaNet CNN:</strong> Specialized CNN for analyzing color distributions, intensity variations, and pigmentation. Detects spectral features and color-based disease markers.</li>
+                            <li><strong>Encoder 3 - StructNet CNN:</strong> Specialized CNN for understanding spatial relationships, geometric features, and anatomical structures. Maps structural patterns and spatial configurations.</li>
+                            <li>Each encoder processes input independently with unique specialized capabilities</li>
                         </ul>
                     </div>
                     <div class="block-item">
-                        <h3>3. Fine-tuned AI Models</h3>
+                        <h3>🔀 Fusion Model</h3>
                         <ul>
-                            <li>Fine-tuned CNN Model (MobileNet V2)</li>
-                            <li>Fine-tuned MLP Model</li>
-                            <li>Fine-tuned BLIP Model</li>
-                            <li>Combined Analysis</li>
+                            <li>Multi-Modal Feature Fusion</li>
+                            <li>Feature Concatenation</li>
+                            <li>Attention Mechanism</li>
+                            <li>Weighted Integration of all encoder outputs</li>
                         </ul>
                     </div>
                     <div class="block-item">
-                        <h3>4. AI Agents</h3>
+                        <h3>🤖 NutriScanAI Medical Agent</h3>
                         <ul>
-                            <li>Medical AI Agent</li>
-                            <li>Research Assistant</li>
-                            <li>Data Analysis Agent</li>
-                            <li>Tool Integration</li>
+                            <li>Multi-Modal Disease Diagnosis</li>
+                            <li>Anomaly Detection Engine</li>
+                            <li>Clinical Context Analyzer</li>
+                            <li>Evidence-Based Reasoning & Validation</li>
                         </ul>
                     </div>
                     <div class="block-item">
-                        <h3>5. Analysis Tools</h3>
+                        <h3>⚖️ Consensus & Classification Layer</h3>
                         <ul>
-                            <li>Medical Image Analysis</li>
-                            <li>Symptom Checker</li>
-                            <li>Treatment Advisor</li>
-                            <li>Risk Assessor</li>
+                            <li>Ensemble Voting Mechanism</li>
+                            <li>Confidence Scoring</li>
+                            <li>Disease Classification</li>
+                            <li>Probability Distribution</li>
                         </ul>
                     </div>
                     <div class="block-item">
-                        <h3>6. Explainability</h3>
+                        <h3>📱 Output Layer with App Features</h3>
                         <ul>
-                            <li>LIME Analysis</li>
-                            <li>Grad-CAM</li>
-                            <li>Integrated Gradients</li>
-                            <li>SHAP Analysis</li>
+                            <li><strong>Diagnosis:</strong> Disease diagnosis with confidence scores</li>
+                            <li><strong>Dashboard:</strong> Interactive visualization & reports</li>
+                            <li><strong>Export:</strong> PDF reports & data export</li>
+                            <li><strong>Notifications:</strong> Alerts & recommendations</li>
                         </ul>
                     </div>
-                    <div class="block-item">
-                        <h3>7. Data Management</h3>
-                        <ul>
-                            <li>Dataset Management</li>
-                            <li>Model Storage</li>
-                            <li>Cache System</li>
-                            <li>Temporary Files</li>
+                </div>
+                
+                <div style="margin-top: 30px; padding: 20px; background: #e3f2fd; border-radius: 8px; border-left: 4px solid #1976d2;">
+                    <h3 style="color: #1565c0; margin-top: 0;">🔬 Detailed CNN Architecture Specifications</h3>
+                    
+                    <div style="margin-top: 20px;">
+                        <h4 style="color: #2e7d32;">PatternNet CNN - Texture & Pattern Analysis</h4>
+                        <ul style="color: #1b5e20;">
+                            <li><strong>Input:</strong> 224x224x3 RGB images</li>
+                            <li><strong>Layer 1:</strong> Conv2D (7x7 kernel, 64 filters, stride 2) → BatchNorm → ReLU → MaxPool (3x3, stride 2)</li>
+                            <li><strong>Layer 2:</strong> Conv2D (5x5 kernel, 128 filters, stride 1) → BatchNorm → ReLU → MaxPool (2x2, stride 2)</li>
+                            <li><strong>Layer 3:</strong> Double Conv2D (3x3 kernel, 256 filters each, padding same) → BatchNorm → ReLU → MaxPool (2x2, stride 2)</li>
+                            <li><strong>Layer 4:</strong> Double Conv2D (3x3 kernel, 512 filters each, padding same) → BatchNorm → ReLU → Dropout (0.3) → GlobalAvgPool</li>
+                            <li><strong>Output:</strong> Dense (512 units) → ReLU → Dropout (0.5) → 512-dimensional feature vector</li>
+                            <li><strong>Specialization:</strong> Optimized for detecting fine-grained textures, repetitive patterns, and micro-structural features</li>
                         </ul>
                     </div>
-                    <div class="block-item">
-                        <h3>8. External Services</h3>
-                        <ul>
-                            <li>GROQ API</li>
-                            <li>LangChain Framework</li>
-                            <li>OpenCV Libraries</li>
-                            <li>PyTorch Framework</li>
+                    
+                    <div style="margin-top: 20px;">
+                        <h4 style="color: #f57c00;">ChromaNet CNN - Color & Intensity Analysis</h4>
+                        <ul style="color: #e65100;">
+                            <li><strong>Input:</strong> 224x224x3 RGB images</li>
+                            <li><strong>Layer 1:</strong> Conv2D (5x5 kernel, 96 filters, stride 1) → BatchNorm → ReLU → MaxPool (3x3, stride 2)</li>
+                            <li><strong>Layer 2:</strong> Double Conv2D (3x3 kernel, 192 filters each, padding same) → BatchNorm → ReLU → MaxPool (2x2, stride 2)</li>
+                            <li><strong>Layer 3:</strong> Double Conv2D (3x3 kernel, 384 filters each, padding same) → BatchNorm → ReLU → MaxPool (2x2, stride 2)</li>
+                            <li><strong>Layer 4:</strong> Double Conv2D (3x3 kernel, 512 filters each, padding same) → BatchNorm → ReLU → Dropout (0.4) → GlobalAvgPool</li>
+                            <li><strong>Output:</strong> Dense (512 units) → ReLU → Dropout (0.5) → 512-dimensional feature vector</li>
+                            <li><strong>Specialization:</strong> Designed for analyzing color distributions, intensity variations, and spectral characteristics</li>
                         </ul>
                     </div>
-                    <div class="block-item">
-                        <h3>9. Output Generation</h3>
-                        <ul>
-                            <li>Medical Reports</li>
-                            <li>PDF Generation</li>
-                            <li>Performance Metrics</li>
-                            <li>Data Visualization</li>
+                    
+                    <div style="margin-top: 20px;">
+                        <h4 style="color: #7b1fa2;">StructNet CNN - Spatial & Structural Analysis</h4>
+                        <ul style="color: #4a148c;">
+                            <li><strong>Input:</strong> 224x224x3 RGB images</li>
+                            <li><strong>Layer 1:</strong> Conv2D (11x11 kernel, 64 filters, stride 4) → BatchNorm → ReLU → MaxPool (3x3, stride 2)</li>
+                            <li><strong>Layer 2:</strong> Conv2D (5x5 kernel, 192 filters, padding same) → BatchNorm → ReLU → MaxPool (3x3, stride 2)</li>
+                            <li><strong>Layer 3:</strong> Triple Conv2D (3x3 kernel, 384→384→256 filters, padding same) → BatchNorm → ReLU → MaxPool (3x3, stride 2)</li>
+                            <li><strong>Layer 4:</strong> Double Conv2D (3x3 kernel, 512 filters each, padding same) → BatchNorm → ReLU → Dropout (0.3) → GlobalAvgPool</li>
+                            <li><strong>Output:</strong> Dense (512 units) → ReLU → Dropout (0.5) → 512-dimensional feature vector</li>
+                            <li><strong>Specialization:</strong> Focused on capturing spatial relationships, geometric patterns, and structural configurations</li>
                         </ul>
                     </div>
-                    <div class="block-item">
-                        <h3>10. Security & Compliance</h3>
-                        <ul>
-                            <li>Data Privacy</li>
-                            <li>HIPAA Compliance</li>
-                            <li>Error Handling</li>
-                            <li>Fallback Mechanisms</li>
+                    
+                    <div style="margin-top: 20px; padding: 15px; background: #fff3e0; border-radius: 5px;">
+                        <h4 style="color: #e65100; margin-top: 0;">🔑 Common Architecture Components</h4>
+                        <ul style="color: #bf360c;">
+                            <li><strong>Batch Normalization:</strong> Applied after every convolutional layer to stabilize training and improve convergence</li>
+                            <li><strong>ReLU Activation:</strong> Used throughout for non-linear feature extraction and gradient flow</li>
+                            <li><strong>MaxPooling:</strong> Reduces spatial dimensions while preserving important features</li>
+                            <li><strong>Global Average Pooling:</strong> Converts feature maps to fixed-size vectors before dense layers</li>
+                            <li><strong>Dropout:</strong> Regularization technique (0.3-0.5) to prevent overfitting</li>
+                            <li><strong>Feature Vector Size:</strong> All three CNNs output 512-dimensional feature vectors for fusion</li>
                         </ul>
                     </div>
+                </div>
+                
+                <div style="margin-top: 30px; padding: 20px; background: #e8f5e9; border-radius: 8px; border-left: 4px solid #4caf50;">
+                    <h3 style="color: #2e7d32; margin-top: 0;">🎯 Unique Architecture Features</h3>
+                    <ul style="color: #1b5e20;">
+                        <li><strong>Specialized Parallel Processing:</strong> Three independent encoders (PatternNet, ChromaNet, StructNet) with distinct specializations process input simultaneously for comprehensive multi-dimensional feature extraction</li>
+                        <li><strong>Complementary Feature Extraction:</strong> Each CNN model (PatternNet, ChromaNet, StructNet) focuses on different aspects of the image, ensuring no critical information is missed</li>
+                        <li><strong>Intelligent Fusion:</strong> Advanced fusion mechanism combines diverse multi-modal features from all three encoders with attention weighting</li>
+                        <li><strong>Agent-Based Analysis:</strong> NutriScanAI Medical Agent provides intelligent reasoning and context-aware disease analysis using fused multi-dimensional features</li>
+                        <li><strong>Consensus Mechanism:</strong> Ensemble approach ensures robust and reliable classification by validating across multiple feature dimensions</li>
+                        <li><strong>Comprehensive Output:</strong> Multiple app features provide complete user experience with detailed insights</li>
+                    </ul>
                 </div>
             </div>
         </div>
