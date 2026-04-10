@@ -33,6 +33,13 @@ from utils import (
     generate_fallback_response, set_groq_api_key, get_groq_api_key
 )
 
+try:
+    from image import figure_to_png_bytes, make_explanation_figure
+
+    IMAGE_COMBINED_XAI_AVAILABLE = True
+except ImportError:
+    IMAGE_COMBINED_XAI_AVAILABLE = False
+
 # Import AI agents
 try:
     from agents import MedicalAIAgent, ResearchAssistantAgent, DataAnalysisAgent, create_agent_instance, get_agent_recommendations
@@ -2260,11 +2267,12 @@ if st.button("🔬 Start Analysis", type="primary", use_container_width=True, ke
             """, unsafe_allow_html=True)
             
             # Create subtabs for AI explainability
-            explain_tab1, explain_tab2, explain_tab3, explain_tab4 = st.tabs([
-                "🎯 LIME Analysis", 
-                "🔍 Edge Detection", 
-                "📊 SHAP Values", 
-                "🔥 Grad-CAM"
+            explain_tab1, explain_tab2, explain_tab3, explain_tab4, explain_tab5 = st.tabs([
+                "🎯 LIME Analysis",
+                "🔍 Edge Detection",
+                "📊 SHAP Values",
+                "🔥 Grad-CAM",
+                "🖼️ Combined XAI frame",
             ])
             
             with explain_tab1:
@@ -2924,7 +2932,85 @@ if st.button("🔬 Start Analysis", type="primary", use_container_width=True, ke
                 </p>
             </div>
             """, unsafe_allow_html=True)
-        
+
+            with explain_tab5:
+                st.markdown("""
+                <div style="background: linear-gradient(135deg, #ebf8ff 0%, #bee3f8 100%); padding: 1rem; border-radius: 10px; margin-bottom: 1rem; border-left: 4px solid #3182ce;">
+                    <h5 style="color: #2d3748; margin-bottom: 0.5rem;">🖼️ Combined explainability frame</h5>
+                    <p style="color: #4a5568; font-size: 0.9rem; margin: 0;">Single view: <strong>Original</strong>, <strong>Grad-CAM</strong>, <strong>LIME</strong>, <strong>SHAP</strong> (optional), and <strong>attention map</strong> — same pipeline as <code>image.py</code>. No prediction summary panel.</p>
+                </div>
+                """, unsafe_allow_html=True)
+
+                if not IMAGE_COMBINED_XAI_AVAILABLE:
+                    st.warning("Combined XAI module could not be loaded. Ensure `image.py` is in the project root.")
+                else:
+                    frame_src = None
+                    if st.session_state.report_data and st.session_state.report_data.get("image") is not None:
+                        frame_src = st.session_state.report_data["image"]
+                    elif image is not None:
+                        frame_src = image
+
+                    if frame_src is None:
+                        st.info("No image found. Run an analysis first so the report image is available.")
+                    else:
+                        pil_frame = frame_src.copy() if hasattr(frame_src, "copy") else frame_src
+                        if not isinstance(pil_frame, Image.Image):
+                            pil_frame = Image.fromarray(np.asarray(pil_frame)).convert("RGB")
+                        else:
+                            pil_frame = pil_frame.convert("RGB")
+
+                        col_a, col_b = st.columns(2)
+                        with col_a:
+                            skip_shap_frame = st.checkbox(
+                                "Skip SHAP (faster)",
+                                value=True,
+                                key="nutriscan_combined_xai_skip_shap",
+                            )
+                        with col_b:
+                            lime_frame = st.slider(
+                                "LIME samples",
+                                min_value=200,
+                                max_value=1200,
+                                value=400,
+                                step=100,
+                                key="nutriscan_combined_xai_lime",
+                            )
+
+                        if st.button("Build combined frame", type="primary", key="nutriscan_combined_xai_build"):
+                            cnn = load_cnn_model(classes=classes)
+                            if cnn is None:
+                                st.error("CNN model is not available.")
+                            else:
+                                with st.spinner("Building combined explainability frame…"):
+                                    try:
+                                        fig, _, _ = make_explanation_figure(
+                                            pil_frame,
+                                            cnn,
+                                            classes,
+                                            lime_samples=lime_frame,
+                                            layout_four=False,
+                                            skip_shap=skip_shap_frame,
+                                            include_prediction_summary=False,
+                                        )
+                                        png = figure_to_png_bytes(fig)
+                                        st.session_state["nutriscan_combined_xai_png"] = png
+                                    except Exception as e:
+                                        st.error(f"Could not build frame: {e}")
+
+                        if st.session_state.get("nutriscan_combined_xai_png"):
+                            try:
+                                st.image(
+                                    st.session_state["nutriscan_combined_xai_png"],
+                                    caption="Original · Grad-CAM · LIME · SHAP · Attention",
+                                    use_container_width=True,
+                                )
+                            except TypeError:
+                                st.image(
+                                    st.session_state["nutriscan_combined_xai_png"],
+                                    caption="Original · Grad-CAM · LIME · SHAP · Attention",
+                                    use_column_width=True,
+                                )
+
         with main_tab4:
             # Medical Report Tab
             st.markdown("""

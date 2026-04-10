@@ -284,81 +284,109 @@ def make_explanation_figure(
     lime_samples: int = 800,
     layout_four: bool = False,
     skip_shap: bool = False,
+    include_prediction_summary: bool = True,
 ) -> Tuple[plt.Figure, torch.Tensor, int]:
     """
     Build the matplotlib figure. Caller should save and `plt.close(fig)`, or use `figure_to_png_bytes(fig)`.
     Returns (figure, probs, predicted_index).
+
+    Restores the model to its previous device after running (safe when sharing `load_cnn_model()` from the app).
+
+    include_prediction_summary: if False, omits the text "Prediction summary" panel and prediction suptitles.
     """
-    model.to(xai_device)
-    model.eval()
+    prev_device = next(model.parameters()).device
+    try:
+        model.to(xai_device)
+        model.eval()
 
-    rgb = pil_to_display_array(pil_img)
-    probs, pred = predict_probs(model, pil_img)
-    target = pred
+        rgb = pil_to_display_array(pil_img)
+        probs, pred = predict_probs(model, pil_img)
+        target = pred
 
-    grad_cam = compute_grad_cam(model, pil_img, target)
-    lime_mask = compute_lime_mask(pil_img, model, classes, lime_samples)
-    shap_map = None if skip_shap else compute_shap_saliency(model, pil_img, target)
-    act_att = compute_activation_attention(model, pil_img)
+        grad_cam = compute_grad_cam(model, pil_img, target)
+        lime_mask = compute_lime_mask(pil_img, model, classes, lime_samples)
+        shap_map = None if skip_shap else compute_shap_saliency(model, pil_img, target)
+        act_att = compute_activation_attention(model, pil_img)
 
-    grad_overlay = overlay_heatmap(rgb, grad_cam, alpha=0.55)
-    lime_overlay = overlay_heatmap(rgb, lime_mask, alpha=0.55, colormap=cv2.COLORMAP_HOT)
-    if shap_map is not None:
-        shap_overlay = overlay_heatmap(rgb, shap_map, alpha=0.55)
-    else:
-        shap_overlay = None
-    shap_title = (
-        "SHAP"
-        if shap_map is not None
-        else ("SHAP (skipped)" if skip_shap else "SHAP (unavailable)")
-    )
-    att_cmap = getattr(cv2, "COLORMAP_VIRIDIS", cv2.COLORMAP_JET)
-    att_overlay = overlay_heatmap(rgb, act_att, alpha=0.55, colormap=att_cmap)
+        grad_overlay = overlay_heatmap(rgb, grad_cam, alpha=0.55)
+        lime_overlay = overlay_heatmap(rgb, lime_mask, alpha=0.55, colormap=cv2.COLORMAP_HOT)
+        if shap_map is not None:
+            shap_overlay = overlay_heatmap(rgb, shap_map, alpha=0.55)
+        else:
+            shap_overlay = None
+        shap_title = (
+            "SHAP"
+            if shap_map is not None
+            else ("SHAP (skipped)" if skip_shap else "SHAP (unavailable)")
+        )
+        att_cmap = getattr(cv2, "COLORMAP_VIRIDIS", cv2.COLORMAP_JET)
+        att_overlay = overlay_heatmap(rgb, act_att, alpha=0.55, colormap=att_cmap)
 
-    pred_name = classes[target] if target < len(classes) else str(target)
-    conf = float(probs[target].item())
+        pred_name = classes[target] if target < len(classes) else str(target)
+        conf = float(probs[target].item())
 
-    if layout_four:
-        fig, axes = plt.subplots(2, 2, figsize=(12, 10))
-        panels = [
-            (axes[0, 0], rgb, "Original"),
-            (axes[0, 1], grad_overlay, "Grad-CAM"),
-            (axes[1, 0], lime_overlay, "LIME"),
-            (axes[1, 1], shap_overlay if shap_overlay is not None else rgb, shap_title),
-        ]
-        for ax, img, title in panels:
-            ax.imshow(np.clip(img, 0, 1))
-            ax.set_title(title, fontsize=12, fontweight="bold")
-            ax.axis("off")
-        fig.suptitle(f"Predicted: {pred_name} ({conf:.1%})", fontsize=14, fontweight="bold", y=1.02)
-    else:
-        fig, axes = plt.subplots(2, 3, figsize=(14, 9))
-        ax_flat = axes.ravel()
-        specs = [
-            (rgb, "Original"),
-            (grad_overlay, "Grad-CAM"),
-            (lime_overlay, "LIME"),
-            (shap_overlay if shap_overlay is not None else rgb, shap_title),
-            (att_overlay, "Attention map\n(mean |activation|)"),
-        ]
-        for i, (img, title) in enumerate(specs):
-            ax_flat[i].imshow(np.clip(img, 0, 1))
-            ax_flat[i].set_title(title, fontsize=11, fontweight="bold")
-            ax_flat[i].axis("off")
+        if layout_four:
+            fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+            panels = [
+                (axes[0, 0], rgb, "Original"),
+                (axes[0, 1], grad_overlay, "Grad-CAM"),
+                (axes[1, 0], lime_overlay, "LIME"),
+                (axes[1, 1], shap_overlay if shap_overlay is not None else rgb, shap_title),
+            ]
+            for ax, img, title in panels:
+                ax.imshow(np.clip(img, 0, 1))
+                ax.set_title(title, fontsize=12, fontweight="bold")
+                ax.axis("off")
+            if include_prediction_summary:
+                fig.suptitle(f"Predicted: {pred_name} ({conf:.1%})", fontsize=14, fontweight="bold", y=1.02)
+            else:
+                fig.suptitle("Explainability frame", fontsize=14, fontweight="bold", y=1.02)
+        else:
+            fig, axes = plt.subplots(2, 3, figsize=(14, 9))
+            ax_flat = axes.ravel()
+            specs = [
+                (rgb, "Original"),
+                (grad_overlay, "Grad-CAM"),
+                (lime_overlay, "LIME"),
+                (shap_overlay if shap_overlay is not None else rgb, shap_title),
+                (att_overlay, "Attention map\n(mean |activation|)"),
+            ]
+            for i, (img, title) in enumerate(specs):
+                ax_flat[i].imshow(np.clip(img, 0, 1))
+                ax_flat[i].set_title(title, fontsize=11, fontweight="bold")
+                ax_flat[i].axis("off")
 
-        ax_pred = ax_flat[5]
-        ax_pred.axis("off")
-        lines = [f"Prediction: {pred_name}", f"Confidence: {conf:.2%}", "", "Top classes:"]
-        topk = torch.topk(probs, k=min(4, len(classes)))
-        for idx, p in zip(topk.indices.tolist(), topk.values.tolist()):
-            lines.append(f"  {classes[idx]}: {p:.2%}")
-        ax_pred.text(0.05, 0.95, "\n".join(lines), transform=ax_pred.transAxes, fontsize=11, verticalalignment="top", family="monospace")
-        ax_pred.set_title("Prediction summary", fontsize=11, fontweight="bold")
+            if include_prediction_summary:
+                ax_pred = ax_flat[5]
+                ax_pred.axis("off")
+                lines = [f"Prediction: {pred_name}", f"Confidence: {conf:.2%}", "", "Top classes:"]
+                topk = torch.topk(probs, k=min(4, len(classes)))
+                for idx, p in zip(topk.indices.tolist(), topk.values.tolist()):
+                    lines.append(f"  {classes[idx]}: {p:.2%}")
+                ax_pred.text(
+                    0.05,
+                    0.95,
+                    "\n".join(lines),
+                    transform=ax_pred.transAxes,
+                    fontsize=11,
+                    verticalalignment="top",
+                    family="monospace",
+                )
+                ax_pred.set_title("Prediction summary", fontsize=11, fontweight="bold")
+            else:
+                ax_flat[5].set_visible(False)
 
-        fig.suptitle("Explainability overview", fontsize=14, fontweight="bold", y=1.01)
+            fig.suptitle(
+                "Explainability overview" if include_prediction_summary else "Explainability frame",
+                fontsize=14,
+                fontweight="bold",
+                y=1.01,
+            )
 
-    plt.tight_layout()
-    return fig, probs, pred
+        plt.tight_layout()
+        return fig, probs, pred
+    finally:
+        model.to(prev_device)
 
 
 def figure_to_png_bytes(fig: plt.Figure, dpi: int = 200) -> bytes:
@@ -374,6 +402,7 @@ def build_explanation_frame(
     lime_samples: int = 800,
     layout_four: bool = False,
     skip_shap: bool = False,
+    include_prediction_summary: bool = True,
 ) -> str:
     """
     layout_four: if True, 2x2 grid with Original, Grad-CAM, LIME, SHAP only (no separate attention panel).
@@ -381,7 +410,13 @@ def build_explanation_frame(
     pil_img = load_image(image_path)
     model, classes = load_mobilenet_vitamin()
     fig, _probs, _pred = make_explanation_figure(
-        pil_img, model, classes, lime_samples, layout_four, skip_shap=skip_shap
+        pil_img,
+        model,
+        classes,
+        lime_samples,
+        layout_four,
+        skip_shap=skip_shap,
+        include_prediction_summary=include_prediction_summary,
     )
     fig.savefig(out_path, dpi=200, bbox_inches="tight")
     plt.close(fig)
@@ -396,6 +431,14 @@ def _running_under_streamlit() -> bool:
         return get_script_run_ctx() is not None
     except ImportError:
         return False
+
+
+def _st_image_responsive(data, **kwargs):
+    """Older Streamlit uses use_column_width; newer uses use_container_width."""
+    try:
+        st.image(data, use_container_width=True, **kwargs)
+    except TypeError:
+        st.image(data, use_column_width=True, **kwargs)
 
 
 def run_streamlit_app() -> None:
@@ -459,7 +502,7 @@ def run_streamlit_app() -> None:
     if cached and cached.get("opts_key") == opts_key:
         pred = cached["pred"]
         st.success(f"Top prediction: **{classes[pred]}** ({cached['conf']:.1%})")
-        st.image(cached["png"], use_container_width=True)
+        _st_image_responsive(cached["png"])
         st.download_button(
             label="Download PNG",
             data=cached["png"],
@@ -486,6 +529,11 @@ def main():
         action="store_true",
         help="Skip SHAP for a quicker run.",
     )
+    parser.add_argument(
+        "--no-prediction-summary",
+        action="store_true",
+        help="Omit the prediction summary panel from the figure.",
+    )
     args = parser.parse_args()
 
     build_explanation_frame(
@@ -494,6 +542,7 @@ def main():
         lime_samples=args.lime_samples,
         layout_four=args.four_panel,
         skip_shap=args.fast,
+        include_prediction_summary=not args.no_prediction_summary,
     )
 
 
