@@ -33,44 +33,6 @@ from utils import (
     generate_fallback_response, set_groq_api_key, get_groq_api_key
 )
 
-try:
-    from image import figure_to_png_bytes, make_explanation_figure
-
-    IMAGE_COMBINED_XAI_AVAILABLE = True
-except ImportError:
-    IMAGE_COMBINED_XAI_AVAILABLE = False
-
-
-def build_and_cache_xai_grid_png(pil_image, classes, cnn_model=None, lime_samples=300):
-    """
-    Build the 2×2 explainability grid once (Original, Grad-CAM, LIME, Attention).
-    Called during analysis so the Explainability tab only displays cached bytes.
-    """
-    if not IMAGE_COMBINED_XAI_AVAILABLE or pil_image is None:
-        return None
-    m = cnn_model if cnn_model is not None else load_cnn_model(classes=classes)
-    if m is None:
-        return None
-    try:
-        pil = pil_image.copy() if hasattr(pil_image, "copy") else pil_image
-        if not isinstance(pil, Image.Image):
-            pil = Image.fromarray(np.asarray(pil)).convert("RGB")
-        else:
-            pil = pil.convert("RGB")
-        fig, _, _ = make_explanation_figure(
-            pil,
-            m,
-            classes,
-            lime_samples=lime_samples,
-            layout_four=False,
-            include_shap=False,
-            include_prediction_summary=False,
-        )
-        return figure_to_png_bytes(fig)
-    except Exception:
-        return None
-
-
 # Import AI agents
 try:
     from agents import MedicalAIAgent, ResearchAssistantAgent, DataAnalysisAgent, create_agent_instance, get_agent_recommendations
@@ -1851,13 +1813,9 @@ if st.button("🔬 Start Analysis", type="primary", use_container_width=True, ke
                         "quality_score": quality_score,
                         "cnn_prediction": predicted_class,
                         "cnn_confidence": confidence,
-                        "agent_analysis": agent_analysis,
+                        "agent_analysis": agent_analysis
                     }
-                    with st.spinner("Saving explainability grid with your report (one-time)…"):
-                        st.session_state.report_data["xai_grid_png"] = build_and_cache_xai_grid_png(
-                            image, classes, cnn_model=model, lime_samples=300
-                        )
-
+                    
                     if debug_mode:
                         st.success("✅ Vitamin deficiency analysis completed!")
                     
@@ -1956,13 +1914,9 @@ if st.button("🔬 Start Analysis", type="primary", use_container_width=True, ke
                         "image_description": image_description,
                         "quality_score": quality_score,
                         "cnn_prediction": predicted_class,
-                        "cnn_confidence": confidence,
+                        "cnn_confidence": confidence
                     }
-                    with st.spinner("Saving explainability grid with your report (one-time)…"):
-                        st.session_state.report_data["xai_grid_png"] = build_and_cache_xai_grid_png(
-                            image, classes, cnn_model=None, lime_samples=300
-                        )
-
+                    
                     if debug_mode:
                         st.success("✅ Retina blood vessel analysis completed!")
                     
@@ -2095,13 +2049,9 @@ if st.button("🔬 Start Analysis", type="primary", use_container_width=True, ke
                         "image_description": image_description,
                         "quality_score": quality_score,
                         "cnn_prediction": predicted_class,
-                        "cnn_confidence": confidence,
+                        "cnn_confidence": confidence
                     }
-                    with st.spinner("Saving explainability grid with your report (one-time)…"):
-                        st.session_state.report_data["xai_grid_png"] = build_and_cache_xai_grid_png(
-                            image, classes, cnn_model=model, lime_samples=300
-                        )
-
+                    
                     if debug_mode:
                         st.success("✅ Combined analysis completed!")
                     
@@ -2310,12 +2260,11 @@ if st.button("🔬 Start Analysis", type="primary", use_container_width=True, ke
             """, unsafe_allow_html=True)
             
             # Create subtabs for AI explainability
-            explain_tab1, explain_tab2, explain_tab3, explain_tab4, explain_tab5 = st.tabs([
-                "🎯 LIME Analysis",
-                "🔍 Edge Detection",
-                "📊 SHAP Values",
-                "🔥 Grad-CAM",
-                "🖼️ Explainability grid",
+            explain_tab1, explain_tab2, explain_tab3, explain_tab4 = st.tabs([
+                "🎯 LIME Analysis", 
+                "🔍 Edge Detection", 
+                "📊 SHAP Values", 
+                "🔥 Grad-CAM"
             ])
             
             with explain_tab1:
@@ -2975,42 +2924,7 @@ if st.button("🔬 Start Analysis", type="primary", use_container_width=True, ke
                 </p>
             </div>
             """, unsafe_allow_html=True)
-
-            with explain_tab5:
-                st.markdown("""
-                <div style="background: linear-gradient(135deg, #ebf8ff 0%, #bee3f8 100%); padding: 1rem; border-radius: 10px; margin-bottom: 1rem; border-left: 4px solid #3182ce;">
-                    <h5 style="color: #2d3748; margin-bottom: 0.5rem;">🖼️ Explainability grid</h5>
-                    <p style="color: #4a5568; font-size: 0.9rem; margin: 0;">One <strong>2×2</strong> figure: <strong>Original</strong>, <strong>Grad-CAM</strong>, <strong>LIME</strong>, <strong>attention</strong>. It is built <strong>once</strong> when you run analysis (same pipeline as <code>image.py</code>) and shown here instantly — nothing is recomputed when you open this tab.</p>
-                </div>
-                """, unsafe_allow_html=True)
-
-                if not IMAGE_COMBINED_XAI_AVAILABLE:
-                    st.warning("Explainability grid module could not be loaded. Ensure `image.py` is in the project root.")
-                else:
-                    grid_png = (
-                        st.session_state.report_data.get("xai_grid_png")
-                        if st.session_state.report_data
-                        else None
-                    )
-                    if grid_png:
-                        try:
-                            st.image(
-                                grid_png,
-                                caption="Original · Grad-CAM · LIME · Attention (cached with your report)",
-                                use_container_width=True,
-                            )
-                        except TypeError:
-                            st.image(
-                                grid_png,
-                                caption="Original · Grad-CAM · LIME · Attention (cached with your report)",
-                                use_column_width=True,
-                            )
-                    else:
-                        st.info(
-                            "No cached grid for this report. It is created when analysis finishes "
-                            "(needs a working CNN and `image.py`). Run **Start Analysis** again, or check that the model loaded."
-                        )
-
+        
         with main_tab4:
             # Medical Report Tab
             st.markdown("""
