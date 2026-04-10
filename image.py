@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 """
-Build a single composite figure from one input image:
-Original | Grad-CAM | LIME | SHAP (gradient-based) | activation attention | prediction summary.
+Build a composite figure from one input image.
+
+With SHAP (default): 2×3 or 2×2 layout including SHAP. With ``--no-shap`` / ``--fast``: 2×2 only —
+Original, Grad-CAM, LIME, Attention (no SHAP).
 
 CLI:
     python image.py path/to/photo.jpg
-    python image.py path/to/photo.jpg -o out.png --fast
+    python image.py path/to/photo.jpg -o out.png --no-shap
     NUTRISCAN_XAI_DEVICE=mps streamlit run image.py   # optional; CPU is default on Mac
 
 Streamlit:
@@ -283,7 +285,7 @@ def make_explanation_figure(
     classes: list,
     lime_samples: int = 800,
     layout_four: bool = False,
-    skip_shap: bool = False,
+    include_shap: bool = True,
     include_prediction_summary: bool = True,
 ) -> Tuple[plt.Figure, torch.Tensor, int]:
     """
@@ -292,7 +294,13 @@ def make_explanation_figure(
 
     Restores the model to its previous device after running (safe when sharing `load_cnn_model()` from the app).
 
-    include_prediction_summary: if False, omits the text "Prediction summary" panel and prediction suptitles.
+    include_shap: if False, SHAP is not computed and the figure is a 2×2 grid:
+        Original | Grad-CAM / LIME | Attention (no SHAP panel).
+
+    layout_four: only used when include_shap is True — 2×2 with SHAP instead of 2×3 (+ optional summary).
+
+    include_prediction_summary: if False, omits the text "Prediction summary" panel and prediction suptitles
+        (for the 2×3 + SHAP layout only).
     """
     prev_device = next(model.parameters()).device
     try:
@@ -305,7 +313,7 @@ def make_explanation_figure(
 
         grad_cam = compute_grad_cam(model, pil_img, target)
         lime_mask = compute_lime_mask(pil_img, model, classes, lime_samples)
-        shap_map = None if skip_shap else compute_shap_saliency(model, pil_img, target)
+        shap_map = compute_shap_saliency(model, pil_img, target) if include_shap else None
         act_att = compute_activation_attention(model, pil_img)
 
         grad_overlay = overlay_heatmap(rgb, grad_cam, alpha=0.55)
@@ -314,18 +322,30 @@ def make_explanation_figure(
             shap_overlay = overlay_heatmap(rgb, shap_map, alpha=0.55)
         else:
             shap_overlay = None
-        shap_title = (
-            "SHAP"
-            if shap_map is not None
-            else ("SHAP (skipped)" if skip_shap else "SHAP (unavailable)")
-        )
+        shap_title = "SHAP" if shap_map is not None else "SHAP (unavailable)"
         att_cmap = getattr(cv2, "COLORMAP_VIRIDIS", cv2.COLORMAP_JET)
         att_overlay = overlay_heatmap(rgb, act_att, alpha=0.55, colormap=att_cmap)
 
         pred_name = classes[target] if target < len(classes) else str(target)
         conf = float(probs[target].item())
 
-        if layout_four:
+        if not include_shap:
+            fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+            panels = [
+                (axes[0, 0], rgb, "Original"),
+                (axes[0, 1], grad_overlay, "Grad-CAM"),
+                (axes[1, 0], lime_overlay, "LIME"),
+                (axes[1, 1], att_overlay, "Attention map"),
+            ]
+            for ax, img, title in panels:
+                ax.imshow(np.clip(img, 0, 1))
+                ax.set_title(title, fontsize=12, fontweight="bold")
+                ax.axis("off")
+            if include_prediction_summary:
+                fig.suptitle(f"Predicted: {pred_name} ({conf:.1%})", fontsize=14, fontweight="bold", y=1.02)
+            else:
+                fig.suptitle("Explainability overview", fontsize=14, fontweight="bold", y=1.02)
+        elif layout_four:
             fig, axes = plt.subplots(2, 2, figsize=(12, 10))
             panels = [
                 (axes[0, 0], rgb, "Original"),
@@ -401,11 +421,12 @@ def build_explanation_frame(
     out_path: str,
     lime_samples: int = 800,
     layout_four: bool = False,
-    skip_shap: bool = False,
+    include_shap: bool = True,
     include_prediction_summary: bool = True,
 ) -> str:
     """
-    layout_four: if True, 2x2 grid with Original, Grad-CAM, LIME, SHAP only (no separate attention panel).
+    layout_four: if True (and include_shap), 2×2 grid with SHAP in the fourth cell.
+    If include_shap is False, layout is always 2×2: Original, Grad-CAM, LIME, Attention.
     """
     pil_img = load_image(image_path)
     model, classes = load_mobilenet_vitamin()
@@ -415,7 +436,7 @@ def build_explanation_frame(
         classes,
         lime_samples,
         layout_four,
-        skip_shap=skip_shap,
+        include_shap=include_shap,
         include_prediction_summary=include_prediction_summary,
     )
     fig.savefig(out_path, dpi=200, bbox_inches="tight")
@@ -444,7 +465,7 @@ def _st_image_responsive(data, **kwargs):
 def run_streamlit_app() -> None:
     st.set_page_config(page_title="NutriScan — Explanation frame", layout="wide")
     st.title("Explainability frame")
-    st.caption("Original, Grad-CAM, LIME, SHAP, and activation attention in one figure.")
+    st.caption("Optional SHAP; without it you get a 2×2 grid: Original, Grad-CAM, LIME, Attention.")
     st.caption(
         f"Compute device: **{xai_device}** (stable on Mac; set `NUTRISCAN_XAI_DEVICE=mps` only if you need MPS)."
     )
@@ -455,9 +476,13 @@ def run_streamlit_app() -> None:
 
     with st.sidebar:
         st.header("Options")
-        fast = st.checkbox("Fast mode (skip SHAP)", value=True, help="SHAP is the slowest step; Grad-CAM + LIME + attention stay on.")
+        include_shap = st.checkbox("Include SHAP (slower)", value=False, help="Off: 2×2 grid with attention instead of SHAP.")
         lime_samples = st.slider("LIME samples", min_value=200, max_value=2000, value=400, step=100)
-        layout_four = st.checkbox("2×2 layout only (no attention / summary cell)", value=False)
+        layout_four = st.checkbox(
+            "2×2 layout with SHAP (when SHAP is on)",
+            value=False,
+            help="Only applies when SHAP is enabled. Otherwise the grid is already 2×2 with attention.",
+        )
         st.divider()
         st.markdown("Run from terminal: `streamlit run image.py`")
 
@@ -468,8 +493,7 @@ def run_streamlit_app() -> None:
         return
 
     file_id = f"{uploaded.name}:{getattr(uploaded, 'size', 0)}"
-    skip_shap = fast
-    opts_key = (file_id, lime_samples, layout_four, skip_shap)
+    opts_key = (file_id, lime_samples, layout_four, include_shap)
 
     pil_img = Image.open(uploaded).convert("RGB")
     model, classes = get_model_and_classes()
@@ -483,7 +507,7 @@ def run_streamlit_app() -> None:
                     classes,
                     lime_samples=lime_samples,
                     layout_four=layout_four,
-                    skip_shap=skip_shap,
+                    include_shap=include_shap,
                 )
                 png_bytes = figure_to_png_bytes(fig)
             except Exception as e:
@@ -515,19 +539,24 @@ def run_streamlit_app() -> None:
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Compose Original + Grad-CAM + LIME + SHAP + Attention into one figure.")
+    parser = argparse.ArgumentParser(description="Compose explainability figure(s); use --no-shap for 2×2 without SHAP.")
     parser.add_argument("image", help="Path to input image (jpg/png/...)")
     parser.add_argument("-o", "--output", default="explanation_frame.png", help="Output PNG path")
     parser.add_argument("--lime-samples", type=int, default=400, help="LIME perturbation count (higher = slower, more stable)")
     parser.add_argument(
         "--four-panel",
         action="store_true",
-        help="2x2 layout: Original, Grad-CAM, LIME, SHAP only (no separate attention / summary cell).",
+        help="With SHAP on: 2×2 grid (Original, Grad-CAM, LIME, SHAP). Without SHAP, use --no-shap for 2×2 with attention.",
+    )
+    parser.add_argument(
+        "--no-shap",
+        action="store_true",
+        help="No SHAP; 2×2 grid with Original, Grad-CAM, LIME, Attention.",
     )
     parser.add_argument(
         "--fast",
         action="store_true",
-        help="Skip SHAP for a quicker run.",
+        help="Alias for --no-shap.",
     )
     parser.add_argument(
         "--no-prediction-summary",
@@ -541,7 +570,7 @@ def main():
         args.output,
         lime_samples=args.lime_samples,
         layout_four=args.four_panel,
-        skip_shap=args.fast,
+        include_shap=not (args.no_shap or args.fast),
         include_prediction_summary=not args.no_prediction_summary,
     )
 
