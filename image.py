@@ -3,18 +3,24 @@
 Build a single composite figure from one input image:
 Original | Grad-CAM | LIME | SHAP (gradient-based) | activation attention | prediction summary.
 
-Usage:
+CLI:
     python image.py path/to/photo.jpg
     python image.py path/to/photo.jpg -o explanations.png --lime-samples 500
+
+Streamlit:
+    streamlit run image.py
 """
 
 from __future__ import annotations
 
 import argparse
+import io
 import logging
 import os
 import platform
 from typing import Optional, Tuple
+
+import streamlit as st
 
 import cv2
 import matplotlib.pyplot as plt
@@ -271,19 +277,18 @@ def compute_shap_saliency(model: nn.Module, pil_img: Image.Image, target_class: 
             model.to(device)
 
 
-def build_explanation_frame(
-    image_path: str,
-    out_path: str,
+def make_explanation_figure(
+    pil_img: Image.Image,
+    model: nn.Module,
+    classes: list,
     lime_samples: int = 800,
     layout_four: bool = False,
-) -> str:
+) -> Tuple[plt.Figure, torch.Tensor, int]:
     """
-    layout_four: if True, 2x2 grid with Original, Grad-CAM, LIME, SHAP only (no separate attention panel).
+    Build the matplotlib figure. Caller should save and `plt.close(fig)`, or use `figure_to_png_bytes(fig)`.
+    Returns (figure, probs, predicted_index).
     """
-    pil_img = load_image(image_path)
     rgb = pil_to_display_array(pil_img)
-
-    model, classes = load_mobilenet_vitamin()
     probs, pred = predict_probs(model, pil_img)
     target = pred
 
@@ -344,10 +349,104 @@ def build_explanation_frame(
         fig.suptitle("Explainability overview", fontsize=14, fontweight="bold", y=1.01)
 
     plt.tight_layout()
+    return fig, probs, pred
+
+
+def figure_to_png_bytes(fig: plt.Figure, dpi: int = 200) -> bytes:
+    buf = io.BytesIO()
+    fig.savefig(buf, format="png", dpi=dpi, bbox_inches="tight")
+    plt.close(fig)
+    return buf.getvalue()
+
+
+def build_explanation_frame(
+    image_path: str,
+    out_path: str,
+    lime_samples: int = 800,
+    layout_four: bool = False,
+) -> str:
+    """
+    layout_four: if True, 2x2 grid with Original, Grad-CAM, LIME, SHAP only (no separate attention panel).
+    """
+    pil_img = load_image(image_path)
+    model, classes = load_mobilenet_vitamin()
+    fig, _probs, _pred = make_explanation_figure(pil_img, model, classes, lime_samples, layout_four)
     fig.savefig(out_path, dpi=200, bbox_inches="tight")
     plt.close(fig)
     logger.info("Saved composite figure to %s", out_path)
     return out_path
+
+
+def _running_under_streamlit() -> bool:
+    try:
+        from streamlit.runtime.scriptrunner import get_script_run_ctx
+
+        return get_script_run_ctx() is not None
+    except ImportError:
+        return False
+
+
+def run_streamlit_app() -> None:
+    st.set_page_config(page_title="NutriScan — Explanation frame", layout="wide")
+    st.title("Explainability frame")
+    st.caption("Original, Grad-CAM, LIME, SHAP, and activation attention in one figure.")
+
+    @st.cache_resource(show_spinner="Loading model…")
+    def get_model_and_classes():
+        return load_mobilenet_vitamin()
+
+    with st.sidebar:
+        st.header("Options")
+        lime_samples = st.slider("LIME samples", min_value=200, max_value=2000, value=800, step=100)
+        layout_four = st.checkbox("2×2 layout only (no attention / summary cell)", value=False)
+        st.divider()
+        st.markdown("Run from terminal: `streamlit run image.py`")
+
+    uploaded = st.file_uploader("Upload an image", type=["png", "jpg", "jpeg", "webp", "bmp"])
+
+    if uploaded is None:
+        st.info("Upload an image to generate the explanation frame.")
+        return
+
+    file_id = f"{uploaded.name}:{getattr(uploaded, 'size', 0)}"
+    opts_key = (file_id, lime_samples, layout_four)
+
+    pil_img = Image.open(uploaded).convert("RGB")
+    model, classes = get_model_and_classes()
+
+    if st.button("Generate explanation frame", type="primary"):
+        with st.spinner("Computing Grad-CAM, LIME, SHAP, attention… (LIME can take a minute)"):
+            try:
+                fig, probs, pred = make_explanation_figure(
+                    pil_img, model, classes, lime_samples=lime_samples, layout_four=layout_four
+                )
+                png_bytes = figure_to_png_bytes(fig)
+            except Exception as e:
+                st.error(f"Failed to build figure: {e}")
+                logger.exception("Streamlit explanation frame failed")
+                return
+
+        st.session_state["xai_frame"] = {
+            "opts_key": opts_key,
+            "png": png_bytes,
+            "pred": pred,
+            "conf": float(probs[pred].item()),
+        }
+
+    cached = st.session_state.get("xai_frame")
+    if cached and cached.get("opts_key") == opts_key:
+        pred = cached["pred"]
+        st.success(f"Top prediction: **{classes[pred]}** ({cached['conf']:.1%})")
+        st.image(cached["png"], use_container_width=True)
+        st.download_button(
+            label="Download PNG",
+            data=cached["png"],
+            file_name="explanation_frame.png",
+            mime="image/png",
+            key="download_explanation_png",
+        )
+    elif uploaded is not None:
+        st.caption("Click **Generate** to run explainability (results stay visible after reruns until settings change).")
 
 
 def main():
@@ -371,4 +470,7 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    if _running_under_streamlit():
+        run_streamlit_app()
+    else:
+        main()
