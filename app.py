@@ -2272,7 +2272,7 @@ if st.button("🔬 Start Analysis", type="primary", use_container_width=True, ke
                 "🔍 Edge Detection",
                 "📊 SHAP Values",
                 "🔥 Grad-CAM",
-                "📊 XAI grid",
+                "🖼️ Combined XAI frame",
             ])
             
             with explain_tab1:
@@ -2936,16 +2936,14 @@ if st.button("🔬 Start Analysis", type="primary", use_container_width=True, ke
             with explain_tab5:
                 st.markdown("""
                 <div style="background: linear-gradient(135deg, #ebf8ff 0%, #bee3f8 100%); padding: 1rem; border-radius: 10px; margin-bottom: 1rem; border-left: 4px solid #3182ce;">
-                    <h5 style="color: #2d3748; margin-bottom: 0.5rem;">📊 XAI grid</h5>
-                    <p style="color: #4a5568; font-size: 0.9rem; margin: 0;">Built from <strong>your analyzed image</strong> only: one grid with Original, Grad-CAM, LIME, SHAP (optional), and attention. Not merged from the other tabs above.</p>
+                    <h5 style="color: #2d3748; margin-bottom: 0.5rem;">🖼️ Combined explainability frame</h5>
+                    <p style="color: #4a5568; font-size: 0.9rem; margin: 0;">Single view: <strong>Original</strong>, <strong>Grad-CAM</strong>, <strong>LIME</strong>, <strong>SHAP</strong> (optional), and <strong>attention map</strong> — same pipeline as <code>image.py</code>. No prediction summary panel.</p>
                 </div>
                 """, unsafe_allow_html=True)
 
                 if not IMAGE_COMBINED_XAI_AVAILABLE:
-                    st.warning("Grid helper not loaded. Ensure `image.py` is in the project root.")
+                    st.warning("Combined XAI module could not be loaded. Ensure `image.py` is in the project root.")
                 else:
-                    import hashlib
-
                     frame_src = None
                     if st.session_state.report_data and st.session_state.report_data.get("image") is not None:
                         frame_src = st.session_state.report_data["image"]
@@ -2953,7 +2951,7 @@ if st.button("🔬 Start Analysis", type="primary", use_container_width=True, ke
                         frame_src = image
 
                     if frame_src is None:
-                        st.info("Upload an image and run analysis first; the grid uses that same image.")
+                        st.info("No image found. Run an analysis first so the report image is available.")
                     else:
                         pil_frame = frame_src.copy() if hasattr(frame_src, "copy") else frame_src
                         if not isinstance(pil_frame, Image.Image):
@@ -2961,35 +2959,29 @@ if st.button("🔬 Start Analysis", type="primary", use_container_width=True, ke
                         else:
                             pil_frame = pil_frame.convert("RGB")
 
-                        with st.expander("Grid options", expanded=False):
-                            col_a, col_b = st.columns(2)
-                            with col_a:
-                                skip_shap_frame = st.checkbox(
-                                    "Skip SHAP (faster grid)",
-                                    value=True,
-                                    key="nutriscan_xai_grid_skip_shap",
-                                )
-                            with col_b:
-                                lime_frame = st.slider(
-                                    "LIME samples",
-                                    min_value=200,
-                                    max_value=1200,
-                                    value=400,
-                                    step=100,
-                                    key="nutriscan_xai_grid_lime",
-                                )
+                        col_a, col_b = st.columns(2)
+                        with col_a:
+                            skip_shap_frame = st.checkbox(
+                                "Skip SHAP (faster)",
+                                value=True,
+                                key="nutriscan_combined_xai_skip_shap",
+                            )
+                        with col_b:
+                            lime_frame = st.slider(
+                                "LIME samples",
+                                min_value=200,
+                                max_value=1200,
+                                value=400,
+                                step=100,
+                                key="nutriscan_combined_xai_lime",
+                            )
 
-                        thumb = pil_frame.resize((64, 64), Image.Resampling.BILINEAR)
-                        img_fp = hashlib.md5(np.asarray(thumb, dtype=np.uint8).tobytes()).hexdigest()
-                        grid_cache_key = (img_fp, lime_frame, skip_shap_frame)
-
-                        need_build = st.session_state.get("nutriscan_xai_grid_key") != grid_cache_key
-                        if need_build:
+                        if st.button("Build combined frame", type="primary", key="nutriscan_combined_xai_build"):
                             cnn = load_cnn_model(classes=classes)
                             if cnn is None:
                                 st.error("CNN model is not available.")
                             else:
-                                with st.spinner("Building grid from image…"):
+                                with st.spinner("Building combined explainability frame…"):
                                     try:
                                         fig, _, _ = make_explanation_figure(
                                             pil_frame,
@@ -3001,25 +2993,20 @@ if st.button("🔬 Start Analysis", type="primary", use_container_width=True, ke
                                             include_prediction_summary=False,
                                         )
                                         png = figure_to_png_bytes(fig)
-                                        st.session_state["nutriscan_xai_grid_key"] = grid_cache_key
-                                        st.session_state["nutriscan_xai_grid_png"] = png
+                                        st.session_state["nutriscan_combined_xai_png"] = png
                                     except Exception as e:
-                                        st.error(f"Could not build grid: {e}")
+                                        st.error(f"Could not build frame: {e}")
 
-                        png_grid = st.session_state.get("nutriscan_xai_grid_png")
-                        if (
-                            png_grid
-                            and st.session_state.get("nutriscan_xai_grid_key") == grid_cache_key
-                        ):
+                        if st.session_state.get("nutriscan_combined_xai_png"):
                             try:
                                 st.image(
-                                    png_grid,
+                                    st.session_state["nutriscan_combined_xai_png"],
                                     caption="Original · Grad-CAM · LIME · SHAP · Attention",
                                     use_container_width=True,
                                 )
                             except TypeError:
                                 st.image(
-                                    png_grid,
+                                    st.session_state["nutriscan_combined_xai_png"],
                                     caption="Original · Grad-CAM · LIME · SHAP · Attention",
                                     use_column_width=True,
                                 )
