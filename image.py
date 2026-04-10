@@ -17,7 +17,6 @@ import argparse
 import io
 import logging
 import os
-import platform
 from typing import Optional, Tuple
 
 import streamlit as st
@@ -53,15 +52,24 @@ IMAGENET_MEAN = torch.tensor([0.485, 0.456, 0.406]).view(1, 3, 1, 1)
 IMAGENET_STD = torch.tensor([0.229, 0.224, 0.225]).view(1, 3, 1, 1)
 
 
-def get_device() -> torch.device:
-    if platform.system() == "Darwin" and torch.backends.mps.is_available() and torch.backends.mps.is_built():
-        return torch.device("mps")
+def get_xai_device() -> torch.device:
+    """
+    One device for the whole pipeline (model + every tensor). Avoids
+    "MPSFloatType vs FloatTensor" errors when MPS tensors mix with CPU weights
+    (common with LIME/SHAP/Grad-CAM on macOS).
+
+    Override: NUTRISCAN_XAI_DEVICE=cpu|cuda|mps
+    Default: CUDA if available, else CPU (MPS is not auto-selected).
+    """
+    forced = os.environ.get("NUTRISCAN_XAI_DEVICE", "").strip().lower()
+    if forced in ("cpu", "cuda", "mps"):
+        return torch.device(forced)
     if torch.cuda.is_available():
         return torch.device("cuda")
     return torch.device("cpu")
 
 
-device = get_device()
+xai_device = get_xai_device()
 
 
 def imagenet_transform() -> transforms.Compose:
@@ -95,7 +103,7 @@ def load_mobilenet_vitamin(
     model.classifier[1] = nn.Linear(model.classifier[1].in_features, num_classes)
 
     if os.path.isfile(weights_path):
-        state = torch.load(weights_path, map_location=device, weights_only=True)
+        state = torch.load(weights_path, map_location=xai_device, weights_only=True)
         model.load_state_dict(state)
         logger.info("Loaded weights from %s", weights_path)
     else:
@@ -105,13 +113,13 @@ def load_mobilenet_vitamin(
         nn.init.xavier_uniform_(model.classifier[1].weight)
         nn.init.zeros_(model.classifier[1].bias)
 
-    model.to(device)
+    model.to(xai_device)
     model.eval()
     return model, classes
 
 
 def predict_probs(model: nn.Module, pil_img: Image.Image) -> Tuple[torch.Tensor, int]:
-    t = imagenet_transform()(pil_img).unsqueeze(0).to(device)
+    t = imagenet_transform()(pil_img).unsqueeze(0).to(xai_device)
     with torch.no_grad():
         logits = model(t)
         probs = torch.softmax(logits, dim=1).squeeze(0)
@@ -132,7 +140,7 @@ def _last_conv_layer(model: nn.Module) -> nn.Conv2d:
 def compute_grad_cam(model: nn.Module, pil_img: Image.Image, target_class: int) -> np.ndarray:
     """Return Grad-CAM map (H, W) in [0, 1]."""
     transform = imagenet_transform()
-    input_tensor = transform(pil_img).unsqueeze(0).to(device)
+    input_tensor = transform(pil_img).unsqueeze(0).to(xai_device)
     input_tensor.requires_grad_(True)
 
     layer = _last_conv_layer(model)
@@ -175,7 +183,7 @@ def compute_grad_cam(model: nn.Module, pil_img: Image.Image, target_class: int) 
 def compute_activation_attention(model: nn.Module, pil_img: Image.Image) -> np.ndarray:
     """Forward-only channel-mean |activation| map, upsampled to 224 (distinct from Grad-CAM)."""
     transform = imagenet_transform()
-    input_tensor = transform(pil_img).unsqueeze(0).to(device)
+    input_tensor = transform(pil_img).unsqueeze(0).to(xai_device)
     layer = _last_conv_layer(model)
     captured: list = []
 
@@ -212,7 +220,7 @@ def compute_lime_mask(pil_img: Image.Image, model: nn.Module, classes: list, num
     def predict_fn(images):
         model.eval()
         tfm = imagenet_transform()
-        batch = torch.stack([tfm(Image.fromarray(x.astype(np.uint8))) for x in images]).to(device)
+        batch = torch.stack([tfm(Image.fromarray(x.astype(np.uint8))) for x in images]).to(xai_device)
         with torch.no_grad():
             logits = model(batch)
             return torch.softmax(logits, dim=1).cpu().numpy()
@@ -243,19 +251,13 @@ def compute_shap_saliency(model: nn.Module, pil_img: Image.Image, target_class: 
         logger.warning("shap not installed; skipping SHAP panel.")
         return None
 
-    use_device = device
-    if use_device.type == "mps":
-        use_device = torch.device("cpu")
-        model_cpu = model.to(use_device)
-    else:
-        model_cpu = model
-
+    model.eval()
     try:
         tfm = imagenet_transform()
-        x = tfm(pil_img).unsqueeze(0).to(use_device)
-        background = torch.rand(8, 3, 224, 224, device=use_device) * 0.5
+        x = tfm(pil_img).unsqueeze(0).to(xai_device)
+        background = torch.rand(8, 3, 224, 224, device=xai_device, dtype=x.dtype) * 0.5
 
-        explainer = shap.GradientExplainer(model_cpu, background)
+        explainer = shap.GradientExplainer(model, background)
         shap_values = explainer.shap_values(x)
 
         if isinstance(shap_values, list):
@@ -272,9 +274,6 @@ def compute_shap_saliency(model: nn.Module, pil_img: Image.Image, target_class: 
     except Exception as e:
         logger.warning("SHAP computation failed (%s); panel will show a placeholder.", e)
         return None
-    finally:
-        if device.type == "mps":
-            model.to(device)
 
 
 def make_explanation_figure(
@@ -283,18 +282,22 @@ def make_explanation_figure(
     classes: list,
     lime_samples: int = 800,
     layout_four: bool = False,
+    skip_shap: bool = False,
 ) -> Tuple[plt.Figure, torch.Tensor, int]:
     """
     Build the matplotlib figure. Caller should save and `plt.close(fig)`, or use `figure_to_png_bytes(fig)`.
     Returns (figure, probs, predicted_index).
     """
+    model.to(xai_device)
+    model.eval()
+
     rgb = pil_to_display_array(pil_img)
     probs, pred = predict_probs(model, pil_img)
     target = pred
 
     grad_cam = compute_grad_cam(model, pil_img, target)
     lime_mask = compute_lime_mask(pil_img, model, classes, lime_samples)
-    shap_map = compute_shap_saliency(model, pil_img, target)
+    shap_map = None if skip_shap else compute_shap_saliency(model, pil_img, target)
     act_att = compute_activation_attention(model, pil_img)
 
     grad_overlay = overlay_heatmap(rgb, grad_cam, alpha=0.55)
@@ -364,13 +367,16 @@ def build_explanation_frame(
     out_path: str,
     lime_samples: int = 800,
     layout_four: bool = False,
+    skip_shap: bool = False,
 ) -> str:
     """
     layout_four: if True, 2x2 grid with Original, Grad-CAM, LIME, SHAP only (no separate attention panel).
     """
     pil_img = load_image(image_path)
     model, classes = load_mobilenet_vitamin()
-    fig, _probs, _pred = make_explanation_figure(pil_img, model, classes, lime_samples, layout_four)
+    fig, _probs, _pred = make_explanation_figure(
+        pil_img, model, classes, lime_samples, layout_four, skip_shap=skip_shap
+    )
     fig.savefig(out_path, dpi=200, bbox_inches="tight")
     plt.close(fig)
     logger.info("Saved composite figure to %s", out_path)
