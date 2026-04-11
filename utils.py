@@ -60,6 +60,15 @@ def _clean_api_key(key: Optional[str]) -> Optional[str]:
 
 GROQ_API_KEY = _clean_api_key(os.getenv("GROQ_API_KEY"))
 
+# Current Groq production chat model IDs (https://console.groq.com/docs/models).
+# Deprecated names like llama3-8b-8192 / mixtral-8x7b-32768 cause HTTP 400 from chat/completions.
+GROQ_CHAT_MODELS = [
+    "llama-3.1-8b-instant",
+    "llama-3.3-70b-versatile",
+    "openai/gpt-oss-20b",
+    "openai/gpt-oss-120b",
+]
+
 
 def get_groq_api_key() -> Optional[str]:
     """Return the cached Groq API key or refresh from the environment."""
@@ -223,17 +232,9 @@ def test_groq_api(api_key: Optional[str] = None):
             # Ignore JSON decoding issues; REST check already succeeded
             available_models = []
         
-        # List of models to try in order of preference
-        models_to_try = [
-            "llama3-8b-8192",
-            "llama3-70b-8192", 
-            "mixtral-8x7b-32768",
-            "gemma2-9b-it"
-        ]
-        
         test_prompt = "Say 'API is working' if you can read this."
-        
-        for model_name in models_to_try:
+
+        for model_name in GROQ_CHAT_MODELS:
             try:
                 def test_model():
                     llm = ChatGroq(
@@ -265,20 +266,23 @@ def test_groq_api(api_key: Optional[str] = None):
                     
             except Exception as model_error:
                 error_msg = str(model_error).lower()
-                if "over capacity" in error_msg or "503" in str(model_error):
-                    # Try next model
+                err_s = str(model_error)
+                if "over capacity" in error_msg or "503" in err_s:
                     continue
-                elif "unauthorized" in error_msg or "invalid" in error_msg:
-                    # REST check succeeded; treat as transient authorization issue
+                if "400" in err_s or "bad request" in error_msg:
                     continue
-                elif "quota" in error_msg or "limit" in error_msg:
+                if "unauthorized" in error_msg or "invalid" in error_msg:
+                    continue
+                if "quota" in error_msg or "limit" in error_msg:
                     return False, "API quota exceeded"
-                else:
-                    continue
+                continue
         
         # If all LLM calls fail but REST call succeeded, still consider API alive
         if available_models:
-            primary_model = next((m for m in models_to_try if m in available_models), available_models[0]) if available_models else "llama3-8b-8192"
+            primary_model = next(
+                (m for m in GROQ_CHAT_MODELS if m in available_models),
+                available_models[0],
+            )
             return True, f"API is responsive (models available: {', '.join(available_models[:3])})"
 
         return False, "All models are currently over capacity. Please try again later."
@@ -412,14 +416,6 @@ def query_langchain(prompt: str, predicted_class: str, confidence: float = None,
             # Use fallback response when no API key
             return generate_fallback_response(predicted_class, "No API key available", cnn_detection, confidence)
         
-        # List of models to try in order of preference
-        models_to_try = [
-            "llama3-8b-8192",
-            "llama3-70b-8192", 
-            "mixtral-8x7b-32768",
-            "gemma2-9b-it"
-        ]
-        
         # Create a simpler, more direct prompt
         enhanced_prompt = f"""
         You are a medical AI assistant. Please analyze the following medical image information and provide a comprehensive analysis.
@@ -439,7 +435,7 @@ def query_langchain(prompt: str, predicted_class: str, confidence: float = None,
         """
         
         # Try each model until one works
-        for model_name in models_to_try:
+        for model_name in GROQ_CHAT_MODELS:
             try:
                 def query_model():
                     llm = ChatGroq(
@@ -472,12 +468,16 @@ def query_langchain(prompt: str, predicted_class: str, confidence: float = None,
                     
             except Exception as model_error:
                 error_msg = str(model_error).lower()
-                if "over capacity" in error_msg or "503" in str(model_error):
-                    # Try next model
+                err_s = str(model_error)
+                if "over capacity" in error_msg or "503" in err_s:
                     continue
-                elif "unauthorized" in error_msg or "invalid" in error_msg:
+                if "400" in err_s or "bad request" in error_msg or "model" in error_msg and (
+                    "not found" in error_msg or "invalid" in error_msg or "decommission" in error_msg
+                ):
+                    continue
+                if "unauthorized" in error_msg or "401" in err_s:
                     return generate_fallback_response(predicted_class, "Invalid API key", cnn_detection, confidence)
-                elif "quota" in error_msg or "limit" in error_msg:
+                if "quota" in error_msg or "limit" in error_msg or "429" in err_s:
                     return generate_fallback_response(predicted_class, "API quota exceeded", cnn_detection, confidence)
         
         # If all models fail, use fallback response

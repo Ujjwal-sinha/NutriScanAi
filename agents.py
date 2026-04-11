@@ -20,6 +20,9 @@ from langchain.memory import ConversationBufferMemory
 from langchain_core.messages import HumanMessage, AIMessage
 from langchain_core.prompts import PromptTemplate
 
+from utils import GROQ_CHAT_MODELS
+
+
 def retry_with_exponential_backoff(func, max_retries=3, base_delay=1):
     """
     Retry a function with exponential backoff.
@@ -222,40 +225,29 @@ class MedicalAIAgent:
     
     def _get_working_llm(self):
         """Get a working LLM instance with fallback models and retry logic."""
-        models_to_try = [
-            "llama3-70b-8192",
-            "llama3-8b-8192",
-            "mixtral-8x7b-32768",
-            "gemma2-9b-it"
-        ]
-        
-        for model_name in models_to_try:
+        for model_name in GROQ_CHAT_MODELS:
             try:
                 def test_model():
                     llm = ChatGroq(
-                        model=model_name,
+                        model_name=model_name,
                         temperature=0.1,
-                        groq_api_key=self.api_key
+                        groq_api_key=self.api_key,
                     )
-                    # Test the model with a simple prompt
                     test_response = llm.invoke("Test")
                     if test_response:
                         return llm
-                    else:
-                        raise Exception("Empty response from model")
-                
-                # Use retry mechanism for this model
+                    raise Exception("Empty response from model")
+
                 return retry_with_exponential_backoff(test_model)
-                
+
             except Exception as e:
                 error_msg = str(e).lower()
                 if "over capacity" in error_msg or "503" in str(e):
                     continue
-                else:
-                    # For other errors, try next model
+                if "400" in str(e) or "bad request" in error_msg:
                     continue
-        
-        # If all models fail, raise an exception
+                continue
+
         raise Exception("All GROQ models are currently unavailable")
     
     def analyze_patient_case(self, 
@@ -325,42 +317,32 @@ class ResearchAssistantAgent:
     
     def _get_working_llm(self):
         """Get a working LLM instance with fallback models and retry logic."""
-        models_to_try = [
-            "llama3-70b-8192",
-            "llama3-8b-8192",
-            "mixtral-8x7b-32768",
-            "gemma2-9b-it"
-        ]
-        
-        for model_name in models_to_try:
+        for model_name in GROQ_CHAT_MODELS:
             try:
                 def test_model():
                     llm = ChatGroq(
-                        model=model_name,
+                        model_name=model_name,
                         temperature=0.1,
-                        groq_api_key=self.api_key
+                        groq_api_key=self.api_key,
                     )
                     # Test the model with a simple prompt
                     test_response = llm.invoke("Test")
                     if test_response:
                         return llm
-                    else:
-                        raise Exception("Empty response from model")
-                
-                # Use retry mechanism for this model
+                    raise Exception("Empty response from model")
+
                 return retry_with_exponential_backoff(test_model)
-                
+
             except Exception as e:
                 error_msg = str(e).lower()
                 if "over capacity" in error_msg or "503" in str(e):
                     continue
-                else:
-                    # For other errors, try next model
+                if "400" in str(e) or "bad request" in error_msg:
                     continue
-        
-        # If all models fail, raise an exception
+                continue
+
         raise Exception("All GROQ models are currently unavailable")
-    
+
     def search_medical_literature(self, condition: str) -> str:
         """Search medical literature for condition"""
         prompt = f"""
